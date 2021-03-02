@@ -1,0 +1,10 @@
+simulation:
+  config_params: []
+  inputs:
+  - v1_in_inlet_pressure
+  - v2_in_pipe_diameter
+  outputs:
+  - o1_out_fluid_velocity
+  - o2_out_flow_rate
+  - o3_out_pressure_drop
+  other_vars: []
