@@ -311,7 +311,7 @@ class FMUSimValidation:
 
         self.var_to_idx = {}
         for i,variable in enumerate(self.model_description.modelVariables):
-            clean_name = re.sub(r'[^a-zA-Z0-9]', '', variable.name)
+            clean_name = re.sub(r'[^a-zA-Z0-9_]', '', variable.name)
             if clean_name != variable.name:
                 log = "Sim variable '{}' has been renamed to '{}' ".format(variable.name, clean_name)
                 log += "to comply with Bonsai naming requirements."
