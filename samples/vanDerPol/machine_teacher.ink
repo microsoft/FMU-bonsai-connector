@@ -94,7 +94,7 @@ graph (input: ObservableState) {
                     Math.Abs(State.x0)+Math.Abs(State.x1) in Goal.RangeBelow(1)
             }
 
-            lesson `Follow Planned Concentration` {
+            lesson `Randomize Oscillation Param` {
                 # Specify the configuration parameters that should be varied
                 # from one episode to the next during this lesson.
                 scenario {
