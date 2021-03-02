@@ -25,7 +25,6 @@ from microsoft_bonsai_api.simulator.generated.models import (
 
 
 from policies import random_policy
-from sim import house_simulator
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 log_path = "logs"
@@ -151,6 +150,9 @@ class FMUSimulatorSession:
         # Apply actions
         self.simulator.apply_actions(sim_action)
         
+        # Run sim one step forward
+        self.simulator.run_step()
+
         # There is currently no render for this version
         #if self.render:
         #    self.sim_render()
