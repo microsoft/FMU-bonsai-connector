@@ -43,14 +43,10 @@ START_TIME = 0.0
 STOP_TIME = 1.0
 STEP_SIZE = 0.1
 
-
-# [TODO] Remove render calls/functionality
-
 class FMUSimulatorSession:
     def __init__(
         self,
         modeldir: str = "fm_RSM_FMU_Pipeline.fmu",
-        render: bool = False,
         env_name: str = "FlomasterPipeline",
         log_file: Union[str, None] = None,
     ):
@@ -60,8 +56,6 @@ class FMUSimulatorSession:
         ----------
         modeldir: str, optional
             filepath to your FMU sim (e.g: "vanDerPol.fmu", if in same folder)
-        render: bool, optional
-            render the current iteration
         env_name: str, optional
             name of simulator environment, registered by SimulatorInterface 
         """
@@ -84,7 +78,6 @@ class FMUSimulatorSession:
 
         self._reset()
         self.terminal = False
-        self.render = render
         if not log_file:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
             log_file = current_time + "_" + env_name + "_log.csv"
@@ -149,17 +142,6 @@ class FMUSimulatorSession:
         # This is a steady-state sim, there is no time advancement
         ## Run sim one step forward
         #self.simulator.run_step()
-        
-        # There is currently no render for this version
-        #if self.render:
-        #    self.sim_render()
-
-    def sim_render(self):
-
-        # Currently, there's no rendering integrated with this sim
-        #if self.render:
-        #    self.simulator.show()
-        return
 
     def halted(self) -> bool:
         """Should return True if the simulator cannot continue"""
@@ -234,7 +216,6 @@ def env_setup():
 
 def test_random_policy(
     num_episodes: int = 10,
-    render: bool = False,
     log_iterations: bool = False,
     max_iterations: int = 288,
 ):
@@ -246,7 +227,7 @@ def test_random_policy(
         number of iterations to run, by default 10
     """
 
-    sim = FMUSimulatorSession(log_file="Flomaster_Pipeline.csv") #, render=render)
+    sim = FMUSimulatorSession(log_file="Flomaster_Pipeline.csv") 
     for episode in range(num_episodes):
         iteration = 0
         terminal = False
@@ -265,13 +246,13 @@ def test_random_policy(
             terminal = iteration > max_iterations
 
 
-def main(render: bool = False, config_setup: bool = False):
+def main(config_setup: bool = False):
     """Main entrypoint for running simulator connections
 
     Parameters
     ----------
-    render : bool, optional
-        visualize steps in environment, by default True, by default False
+    config_setup : bool, optional
+        apply config setup using .env file, by default False
     """
 
     # workspace environment variables
@@ -280,7 +261,7 @@ def main(render: bool = False, config_setup: bool = False):
         load_dotenv(verbose=True, override=True)
 
     # Grab standardized way to interact with sim API
-    sim = FMUSimulatorSession() #, render=render)
+    sim = FMUSimulatorSession()
 
     # Configure client to interact with Bonsai service
     config_client = BonsaiClientConfig()
@@ -357,12 +338,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Bonsai and Simulator Integration...")
     parser.add_argument(
-        "--render",
-        type=lambda x: bool(strtobool(x)),
-        default=False,
-        help="Render training episodes",
-    )
-    parser.add_argument(
         "--log-iterations",
         type=lambda x: bool(strtobool(x)),
         default=False,
@@ -385,8 +360,8 @@ if __name__ == "__main__":
 
     if args.test_local:
         test_random_policy(
-            render=args.render, num_episodes=1000, log_iterations=args.log_iterations
+            num_episodes=1000, log_iterations=args.log_iterations
         )
     else:
-        main(config_setup=args.config_setup, render=args.render)
+        main(config_setup=args.config_setup)
 
