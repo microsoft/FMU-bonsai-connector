@@ -1,6 +1,4 @@
-# FMU connector
-
-[TOREMOVE] ***Replace {SimPlatform} with the name of your simulation platform and fill out this template as described in the markdown files.***
+# FMU Connector
 
 A connector for integrating FMU models with [Microsoft Project Bonsai](https://azure.microsoft.com/en-us/services/project-bonsai/).
 Note, FMUs are simulation units that follow the [FMI standard](https://fmi-standard.org/):
@@ -13,30 +11,28 @@ The SDK supports the following versions of Python:
 
 - Python 3 versions 3.7 and later
 
-This FMU Connector takes advantage of 2 auxiliary packages*:
+This FMU Connector relies on 2 auxiliary packages*:
 
 1. [Microsoft Bonsai API](https://github.com/microsoft/microsoft-bonsai-api) - This API manages the connection to the Bonsai Azure Service.
 
 2. [FMPy](https://github.com/CATIA-Systems/FMPy) - This library automates the interaction with FMU models following the [FMI Standard](https://fmi-standard.org/).
 
 *For more information check the readme at:
-> [FMU-bonsai-connector\FMU_Connector\README.md](FMU_Connector\README.md)
+> [FMU-bonsai-connector\FMU_Connector\README.md](FMU_Connector/README.md)
 
-## Installation
+## Setting up your environment
+
+**Installing Anaconda**
+
+For this project you will need to install [Anaconda](https://www.anaconda.com/products/individual) (or miniconda).
+This software will take care of handling your virtual environments and packages installed.
 
 **Get Your Conda Environment Ready**
 
-Create a new conda environment:
+> conda env create --file environment.yml
+- A new environment called "fmu_env" should be ready to be used with any of the samples provided.
 
-> conda create -n fmu_env python=3.7
-
-Install required packages:
-
-> conda env update -n fmu_env --file environment.yml
-
-[TODO] Update "environment.yml" file with FMPy
-
-## Setting up Bonsai configuration
+**Setting up Bonsai configuration**
 
 Choose either of the following two approaches:
 
@@ -51,7 +47,7 @@ Choose either of the following two approaches:
 
 2. Set-up through .env file (per example):
 
-    - inside the example folder (where main.py is located), drop a .env file with the corresponding config vars**:
+    - inside the example folder (where main.py is located), drop a .env file with the corresponding bonsai config parameters**:
     
       > SIM_WORKSPACE="abcdefgh-ijkl-lmno-pqrs-tuvwxyz12345"
       >
@@ -59,68 +55,35 @@ Choose either of the following two approaches:
 
     - then, open 'main.py' and search for the following keyword "--config-setup"  -->  Set 'default' value to "True"
 
-  ** Note, 'config vars' can be extracted from preview.bons.ai
+  ** Note, configuration parameters (workspace id & access key) should be retrieved from [preview.bons.ai](https://preview.bons.ai).
+To drop them in a new .env file: (1) create a blank .txt file, (2) rename to .env, (3) drop your config params *(quotes included)*.
 
-## Usage: Running a local simulator
+## Getting a new sim integrated
 
-Open an Anaconda Prompt window.
+For setting up a new simulator follow the next steps:
 
-1. Point to the "samples" folder and get inside any of the proposed examples
+1. Copy either of the example folders and rename to your own example name
+2. Remove all files within the "sim" folder, and drop your FMU model
+3. Upate [main.py](samples/fm_RSM_FMU_Pipeline/main.py) (read section bellow)
+4. Update machine_teacher.ink
+5. Update README.md before sharing/uploading your model
 
-2. Create a new brain and push INK file:
+## Getting a new sim integrated: Update main.py
 
-    > bonsai brain create -n fmu_brain_v0
-    > 
-    > bonsai brain version update-inkling -f machine_teacher.ink -n fmu_brain_v0
+When setting up a new FMU model, you will have to get your hands dirty. But do not worry, we have simplified it for you.
+We have added a set of "TODO_PER_SIM" tags to help you localize the 10 changes that need to be considered:
 
-3. Start simulator using:
-
-    > python main.py
-
-4. Connect simulators to unmanaged local sim:
-
-    > bonsai simulator unmanaged connect -b fmu_brain_v0 -a Train -c <concept_name> --simulator-name <sim_name>
-
-
-If the simulation is running successfully, command line output should show "Sim successfully registered".
-The Bonsai workspace should show the FMU simulator name under the Simulators section, listed as Unmanaged.
-
-> [TODO] Optional: Does the connector for FMU allow an integrated way of launching a local simulator, debugging a local simulator, or visualizing a local simulator as it executes via a user interface inside FMU? Such capabilities can be described here.
-
-## Usage: Scaling your simulator
-
-Open an Anaconda Prompt window.
-
-1. Go to the "samples" folder and get inside any of the proposed examples
-
-2. Create a new brain and push INK file:
-
-    > bonsai brain create -n fmu_brain_v1
-    > 
-    > bonsai brain version update-inkling -f machine_teacher.ink -n fmu_brain_v1
-
-3. Log in into Azure and push image
-
-    > az login
-    > 
-    > az acr build --image fmu_image:1 --file Dockerfile --registry <ACR_REGISTRY_NAME> .
-
-    *Note, ACR Registry can be extracted from preview.bons.ai --> Workspace ACR path == <ACR_REGISTRY_NAME>.azurecr.io
-
-4. Click over "Add Sim" > "Other", and insert the location of the image:
-
-    - Azure Container Registry image path:  <ACR_REGISTRY_NAME>.azurecr.io/fmu_image:1
-
-    - Simulator package display name:  fmu_sim_v1
-
-5. Add package name to INK file:
-
-    - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {"fmu_sim_v1"}"
-
-
-** A link to the documentation topic [Add a training simulator to your Bonsai workspace](https://docs.microsoft.com/en-us/bonsai/guides/add-simulator?tabs=add-cli%2Ctrain-inkling&pivots=sim-platform-other) for information about how to upload the container, add it to Bonsai, and scale the simulator.
-
-> [TODO] Optional: Does the connector for FMU allow an integrated way of uploading a simulator to the Bonsai service or scaling the simulator instances for training via a user interface inside FMU? Such capabilities can be described here.
+1. Define a version for FMI to be used by default in case FMU model lacks the correct variable (default "2.0")
+2. Define if model should be run as a steady-state simulator (no time evolution involved)
+3. Define Start, Stop, and Step Size in model's sim time units
+4. Define default config in a dictionary - This will be used whenever none is configured on machine_teacher.ink
+5. Set-up model filepath, as well as sim name to be displayed in preview.bons.ai
+6. (optional) Modify states to be sent to Bonsai - By default we send all states
+7. Add any action transformations required (from Bonsai to sim) -- if needed
+8. Define any conditions when the simulation should be stopped
+     - Note, halted episodes are thrown away unless terminated on INK too
+9. Update the random policy to be used for the example on policies.py
+10. Disabling authentication once you have validated model inputs/outputs/config params (displayed in command prompt)
 
 ## Trademarks
 

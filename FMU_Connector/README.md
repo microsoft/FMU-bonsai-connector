@@ -1,12 +1,12 @@
-# FMU Connector
+# FMU Connector: Class Explained
 
 ## - External Libraries -
 
-This FMU Connector takes advantage of 2 auxiliary packages:
+This FMU Connector takes advantage of 2 auxiliary packages\libraries:
 
 1. [Microsoft Bonsai API](https://github.com/microsoft/microsoft-bonsai-api)
 - This API manages the connection to the Bonsai Azure Service. It enables the simulation registration towards training/assessing Bonsai brains.
-- All related code can be found at the following folder:
+- Library can be found at the following folder:
   >  FMU-bonsai-connector\FMU_Connector\microsoft-bonsai-api"
 
 2. [FMPy](https://github.com/CATIA-Systems/FMPy)
@@ -17,7 +17,7 @@ interactions with simulations.
 
 The core part of the FMU Connector takes care of automating the interaction with FMUs using the FMPy library towards interacting with Bonsai
 brains. The FMU abstracted class can be found at:
-  > FMU-bonsai-connector\FMU_Connector\FMU_Connector.py"
+  > [FMU-bonsai-connector\FMU_Connector\FMU_Connector.py"](FMU_Connector.py)
 
 Note, the part related to Bonsai Azure Service has been abstracted directly at the example-level, pretty much in the fashion of
 microsoft-bonsai-api.
@@ -28,7 +28,9 @@ The FMU interaction consists of 2 classes:
   - The model makes use of the FMI standard as follows:
       > FMU_Model.fmu >> ModelDescription.xml >> ModelVariables >> ScalarVariable
       > > causality="parameter" --> Configuration parameters, and input to the simulation
+      > > 
       > > causality="input" --> Brain actions, and input to the simulation
+      > > 
       > > causality="output" --> Brain states, and output to the simulation
   - Nonetheless, to cope with those FMU models which might not have the correct configuration, we make use of an additional YAML file.
   This YAML file is directly used when found at the FMU directory level.

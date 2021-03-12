@@ -1,9 +1,9 @@
-# Flomaster Pipeline
+# FMU Example: Flomaster Pipeline
 
 This simulator simulates the flow of water within a pipe. It is a steady-state simulator.
 There are no steps involved in this simulator per se. What this example seeks is that the brain
-learns to find the correct actions to drive the steady-state simulation to a specific
-output value on "flow rate".
+learns to parametrize the correct input pipe pressure and diameter to drive the steady-state
+simulation to a specific output value on "flow rate".
 
 ## States
 
@@ -22,7 +22,7 @@ output value on "flow rate".
 
 ## Configuration Parameters
 
-NONE
+None for this example
 
 ## Setting up: Installation & Bonsai configuration
 
@@ -31,7 +31,7 @@ Go to this project's [README.md](../../README.md) to review:
 - INSTALLATIONS REQUIRED (conda & setting environment up)
 - SETTING UP BONSAI CONFIGURATION
 
-## Usage: Running a local simulator
+## Running the model: Local simulator
 
 Open an Anaconda Prompt window.
 
@@ -51,17 +51,22 @@ Open an Anaconda Prompt window.
 
     > bonsai simulator unmanaged connect -b fmu_brain_v0 -a Train -c ReachTargetPipeflow --simulator-name FlomasterPipeline
 
-
-If the simulation is running successfully, command line output should show "Sim successfully registered".
+If the simulation is running successfully, command line output should print "Registered simulator".
 The Bonsai workspace should show the FMU simulator name under the Simulators section, listed as Unmanaged.
 
-> [TODO] Optional: Does the connector for FMU allow an integrated way of launching a local simulator, debugging a local simulator, or visualizing a local simulator as it executes via a user interface inside FMU? Such capabilities can be described here.
+## Running the model: Scaling your simulator
 
-## Usage: Scaling your simulator
+Once you have confirmed input/outputs of the model through command prompt, you can go ahead and disable authentication.
+Open [main.py](main.py) and set FIRST_TIME_RUNNING to False:
 
-Open an Anaconda Prompt window.
+> FIRST_TIME_RUNNING = False
 
-1. Go to the "samples" folder and get inside any of the proposed examples
+- This step ensures the image is not waiting for user input to start the simulation. Config file approved by user will be used.
+In our case the configure is located at: [fm_RSM_FMU_Pipeline_conf.yaml](sim/fm_RSM_FMU_Pipeline_conf.yaml)
+
+Then, on an Anaconda Prompt window
+
+1. Go to the "samples\fm_RSM_FMU_Pipeline" folder
 
 2. Create a new brain and push INK file:
 
@@ -73,7 +78,7 @@ Open an Anaconda Prompt window.
 
     > az login
     > 
-    > az acr build --image fmu_image_flomaster:1 --file Dockerfile --registry <ACR_REGISTRY_NAME> .
+    > az acr build --image fmu_image_flomaster:1 --platform windows --file Dockerfile-windows --registry <ACR_REGISTRY_NAME> .
 
     *Note, ACR Registry can be extracted from preview.bons.ai --> Workspace ACR path == <ACR_REGISTRY_NAME>.azurecr.io
 
@@ -85,10 +90,8 @@ Open an Anaconda Prompt window.
 
 5. Add package name to INK file:
 
-    - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {"fmu_image_flomaster_v1"}"
+    - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {_"fmu_image_flomaster_v1"_}"
 
 ** Check [adding a training simulator to your Bonsai workspace](https://docs.microsoft.com/en-us/bonsai/guides/add-simulator?tabs=add-cli%2Ctrain-inkling&pivots=sim-platform-other)
 for further information about how to upload the container, add it to Bonsai, and scale the simulator.
-
-> [TODO] Optional: Does the connector for FMU allow an integrated way of uploading a simulator to the Bonsai service or scaling the simulator instances for training via a user interface inside FMU? Such capabilities can be described here.
 
