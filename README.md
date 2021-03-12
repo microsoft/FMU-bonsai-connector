@@ -20,7 +20,7 @@ This FMU Connector takes advantage of 2 auxiliary packages*:
 2. [FMPy](https://github.com/CATIA-Systems/FMPy) - This library automates the interaction with FMU models following the [FMI Standard](https://fmi-standard.org/).
 
 *For more information check the readme at:
-> FMU-bonsai-connector\FMU_Connector\README.md
+> [FMU-bonsai-connector\FMU_Connector\README.md](FMU_Connector\README.md)
 
 ## Installation
 
