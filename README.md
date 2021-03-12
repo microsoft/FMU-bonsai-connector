@@ -68,7 +68,7 @@ For setting up a new simulator follow the next steps:
 4. Update machine_teacher.ink
 5. Update README.md before sharing/uploading your model
 
-## Getting a new sim integrated: Update main.py
+### Getting a new sim integrated: Update main.py
 
 When setting up a new FMU model, you will have to get your hands dirty. But do not worry, we have simplified it for you.
 We have added a set of "TODO_PER_SIM" tags to help you localize the 10 changes that need to be considered:

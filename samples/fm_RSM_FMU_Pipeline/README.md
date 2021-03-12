@@ -47,9 +47,13 @@ Open an Anaconda Prompt window.
 
     > python main.py
 
-4. Connect simulators to unmanaged local sim:
+4. Start brain training from CLI
 
-    > bonsai simulator unmanaged connect -b fmu_brain_v0 -a Train -c ReachTargetPipeflow --simulator-name FlomasterPipeline
+    > bonsai brain version start-training -n fmu_brain_flomaster_v0
+
+5. Connect simulators to unmanaged local sim:
+
+    > bonsai simulator unmanaged connect -b fmu_brain_flomaster_v0 -a Train -c ReachTargetPipeflow --simulator-name FlomasterPipeline
 
 If the simulation is running successfully, command line output should print "Registered simulator".
 The Bonsai workspace should show the FMU simulator name under the Simulators section, listed as Unmanaged.
