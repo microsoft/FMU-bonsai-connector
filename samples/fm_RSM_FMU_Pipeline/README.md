@@ -26,7 +26,7 @@ NONE
 
 ## Setting up: Installation & Bonsai configuration
 
-Go to this project's README.md to review:
+Go to this project's [README.md](../../README.md) to review:
 
 - INSTALLATIONS REQUIRED (conda & setting environment up)
 - SETTING UP BONSAI CONFIGURATION
