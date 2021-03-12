@@ -53,7 +53,7 @@ type ObservableState {
 # Action provided as output by policy and sent as
 # input to the simulator
 type SimAction {
-    # Delta to be applied to initial state
+    # Delta to be added to previous action
     x0_adjust: number<-0.2 .. 0.2>
 }
 
