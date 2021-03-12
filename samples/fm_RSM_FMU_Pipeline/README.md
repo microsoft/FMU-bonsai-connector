@@ -65,8 +65,9 @@ Open [main.py](main.py) and set FIRST_TIME_RUNNING to False:
 
 > FIRST_TIME_RUNNING = False
 
-- This step ensures the image is not waiting for user input to start the simulation. Config file approved by user will be used.
-In our case the configure is located at: [fm_RSM_FMU_Pipeline_conf.yaml](sim/fm_RSM_FMU_Pipeline_conf.yaml)
+- This step ensures the image is not waiting for user input to start the simulation. Config file approved by user is used.
+once variable is set to False. In our case the sim configuration should be located at:
+[sim/fm_RSM_FMU_Pipeline_conf.yaml](sim/fm_RSM_FMU_Pipeline_conf.yaml)
 
 Then, on an Anaconda Prompt window
 

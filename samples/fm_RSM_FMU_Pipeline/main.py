@@ -46,9 +46,8 @@ STEADY_STATE_SIM = True
 START_TIME = 0.0
 STOP_TIME = 1.0
 STEP_SIZE = 0.1
-
+# if steady-state sim, default to {STOP_TIME = 1.0} & {STEP_SIZE = 0.1}
 if STEADY_STATE_SIM:
-    # if steady-state sim, default to {STOP_TIME = 1.0} & {STEP_SIZE = 0.1}
     STOP_TIME = 1.0
     STEP_SIZE = 0.1
 
