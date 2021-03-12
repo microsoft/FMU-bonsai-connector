@@ -29,24 +29,37 @@ from policies import random_policy
 dir_path = os.path.dirname(os.path.realpath(__file__))
 log_path = "logs"
 
-# Turn to False once you authenticate the config_params, inputs, and outputs of the model
+# TODO_PER_SIM 10: Turn to False after model in/out config vars have been verified
+# - You can turn this off once you are satisfied with the config saved to "sim\{model_name}_conf.yaml"
 FIRST_TIME_RUNNING = True
 
-# [TODO] dynamically read FMI version from modelDescription.xml
+# TODO_PER_SIM 1: read FMI version from modelDescription.xml
+# - you can manually unzip the folder to check, or run with FMI_VERSIOn=2.0, and get it unpacked
 # ("1.0", "2.0", "3.0")
 FMI_VERSION = "2.0"
 
+# TODO_PER_SIM 2: Set to True when dealing with a steady state simulator (no time evolution involved)
+STEADY_STATE_SIM = True
+
+# TODO_PER_SIM 3: define start, stop, and step size
+# - stop and step size values are overwritten for steady state sims
 START_TIME = 0.0
-# unused for this example
-#  - still provide values to ensure sanity check doesn't fail
-# [TODO] Review code to avoid requiring providing these values
 STOP_TIME = 1.0
 STEP_SIZE = 0.1
 
+if STEADY_STATE_SIM:
+    # if steady-state sim, default to {STOP_TIME = 1.0} & {STEP_SIZE = 0.1}
+    STOP_TIME = 1.0
+    STEP_SIZE = 0.1
+
+# TODO_PER_SIM 4: define default config file (if None provided by brain)
+DEFAULT_CONFIG = {}
+
 class FMUSimulatorSession:
+    # TODO_PER_SIM 5: Set-up model filepath (modeldir) & sim name (env_name) variables
     def __init__(
         self,
-        modeldir: str = "fm_RSM_FMU_Pipeline.fmu",
+        modeldir: str = "sim\\fm_RSM_FMU_Pipeline.fmu",
         env_name: str = "FlomasterPipeline",
         log_file: Union[str, None] = None,
     ):
@@ -55,18 +68,21 @@ class FMUSimulatorSession:
         Parameters
         ----------
         modeldir: str, optional
-            filepath to your FMU sim (e.g: "vanDerPol.fmu", if in same folder)
+            relative filepath to your FMU sim (e.g: "sim\\vanDerPol.fmu", if in sim subfolder)
         env_name: str, optional
-            name of simulator environment, registered by SimulatorInterface 
+            name of simulator environment, registered by SimulatorInterface
+            note, this will be your sim name in preview.bons.ai
         """
 
         self.modeldir = modeldir
+        self.model_full_path = os.path.join(dir_path, self.modeldir)
         self.env_name = env_name
-        print("Using simulator file from: ", os.path.join(dir_path, self.modeldir))
-        self.default_config = {}
+        print("Using simulator file from: ", self.model_full_path)
+
+        self.default_config = DEFAULT_CONFIG
 
         # Validate and instance FMU model
-        self.simulator = FMUConnector(model_filepath = self.modeldir,
+        self.simulator = FMUConnector(model_filepath = self.model_full_path,
                                       fmi_version = FMI_VERSION,
                                       start_time = START_TIME,
                                       stop_time = STOP_TIME,
@@ -95,11 +111,14 @@ class FMUSimulatorSession:
     def get_state(self) -> Dict[str, float]:
         """ Called to retreive the current state of the simulator. """
 
+        # TODO_PER_SIM 6: (optional) Modify states to be sent to Bonsai
+        # - currently, all states are sent to Bonsai: config_params, states (sim outputs), and actions (sim inputs)
         return self.simulator.get_all_vars()
 
 
     def _reset(self, config: dict = None):
         """Helper function for resetting a simulator environment
+           Runs with config provided by Bonsai (if given), uses default config otherwise
 
         Parameters
         ----------
@@ -108,15 +127,18 @@ class FMUSimulatorSession:
         """
 
         if config:
-            self.sim_config = config
+            if len(config.items()) > 0:
+                self.sim_config = config
+            else:
+                self.sim_config = self.default_config
         else:
             self.sim_config = self.default_config
 
         self.simulator.reset(self.sim_config)
 
+
     def episode_start(self, config: Dict[str, Any] = None):
-        """Method invoked at the start of each episode with a given 
-        episode configuration.
+        """Method invoked at the start of each episode to reset the sim with a given episode configuration.
 
         Parameters
         ----------
@@ -125,7 +147,7 @@ class FMUSimulatorSession:
         """
 
         self._reset(config)
-        #print(self.simulator.get_all_vars())
+
 
     def episode_step(self, action: Dict[str, Any]):
         """Called for each step of the episode 
@@ -135,20 +157,24 @@ class FMUSimulatorSession:
         action : Dict[str, Any]
             BrainAction chosen from the Bonsai Service, prediction or exploration
         """
-
+        
+        # TODO_PER_SIM 7: Add any action transformation required (from Bonsai to sim)
         # Apply actions
         self.simulator.apply_actions(action)
 
-        # This is a steady-state sim, there is no time advancement
-        ## Run sim one step forward
-        #self.simulator.run_step()
+        # Run sim one step forward
+        # - Stepping is performed only on sims that evolve over time (STEADY_STATE_SIM == False)
+        if not STEADY_STATE_SIM:
+            self.simulator.run_step()
+
 
     def halted(self) -> bool:
         """Should return True if the simulator cannot continue"""
+        # TODO_PER_SIM 8: Define any halt conditions
         return self.terminal
 
     def random_policy(self, state: Dict = None) -> Dict:
-
+        # TODO_PER_SIM 9: Update the random policy to be used for the example on policies.py
         return random_policy()
 
     def log_iterations(self, state, action, episode: int = 0, iteration: int = 1):
