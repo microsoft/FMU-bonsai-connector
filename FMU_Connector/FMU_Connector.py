@@ -337,7 +337,6 @@ class FMUSimValidation:
         """Remove non-alphanumeric characters to make them valid with Bonsai interaction.
         """
 
-        self.var_to_idx = {}
         for i,variable in enumerate(self.model_description.modelVariables):
             clean_name = re.sub(r'[^a-zA-Z0-9_]', '', variable.name)
             if clean_name != variable.name:
@@ -402,6 +401,7 @@ class FMUConnector:
         self.sim_outputs = validated_sim.sim_outputs
         self.sim_other_vars = validated_sim.sim_other_vars
         # model variable dictionaries with
+        print("AAAAAAAAA1", validated_sim.vars_to_idx)
         self.vars_to_idx = validated_sim.vars_to_idx
         self.vars_to_type_f = validated_sim.vars_to_type_f
         self.vars_to_ini_vals = validated_sim.vars_to_ini_vals
@@ -794,10 +794,10 @@ class FMUConnector:
         indices_array = []
         names_array = []
         for name in var_names:
-            if name not in self.var_to_idx.keys():
+            if name not in self.vars_to_idx.keys():
                 print("[_var_names_to_indices] Invalid variable name '{}' has been skipped.".format(name))
                 continue
-            indices_array.append(self.var_to_idx[name])
+            indices_array.append(self.vars_to_idx[name])
             names_array.append(name)
 
         if not len(var_names) > 0:

@@ -1,4 +1,4 @@
-name: fmu_env2
+name: fmu_env
 dependencies:
 - python=3.7
 - pip
