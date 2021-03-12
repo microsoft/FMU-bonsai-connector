@@ -1,4 +1,6 @@
 
+import os
+import pathlib
 from datetime import datetime
 import shutil
 import fmpy
@@ -19,9 +21,6 @@ START_TIME = 0.0
 STOP_TIME = 20.0
 STEP_SIZE = 0.1
 
-
-# [TODO] Track which object/attribute can inform of sim errors
-#  > Add as a halt condition, and reset
 
 class FMUSimValidation:
     def __init__(
@@ -56,10 +55,40 @@ class FMUSimValidation:
         # note, it doesn't suppose any problem, since interaction with sim uses indices, not names.
         self._clean_non_alphanumeric_chars()
 
+
         # collect the value references (indices)
+        # collect the value types (Real, Integer or Enumeration)
+        # collect the variables to be initialized and the value to do so at
         self.vars_to_idx = {}
+        self.vars_to_type_f = {}
+        self.vars_to_ini_vals = {}
         for variable in self.model_description.modelVariables:
-            self.vars_to_idx[variable.name] = variable.valueReference #, variable.causality
+            # extract key attributes per variable
+            var_idx = variable.valueReference #, variable.causality
+            var_name = variable.name
+            var_type = variable.type
+            var_start = variable.start
+            
+            # collect type reference
+            if var_type == "Real":
+                self.vars_to_type_f[var_name] = float
+            elif var_type == "Integer":
+                self.vars_to_type_f[var_name] = int
+            else:
+                # [TODO] Integrate variables of type "Enumeration". How do we cast? Define a function for "self.vars_to_type_f".
+                # [TODO] Integrate variables of type string (need to find correct var_type tag first).
+                # [TODO] Integrate variables of type boolean (need to find correct var_type tag first).
+                print(f"Variable '{var_name}' will be skipped. FMU connector cannot currently handle vars of type '{var_type}'.")
+                continue
+            
+            # collect the value references (indices)
+            self.vars_to_idx[var_name] = var_idx
+
+            # collect the variables to be initialized and the value to do so at
+            if var_start is not None:
+                # cast variable prior to storing
+                self.vars_to_ini_vals[var_name] = self.vars_to_type_f[var_name](var_start)
+        
 
         # initialize sim config
         self.is_model_config_valid = False  # Currently unused, since error is raised if model invalid
@@ -145,45 +174,44 @@ class FMUSimValidation:
         """
 
 
-        print("\n---- Looking to see if YAML config file exists ----")
+        print("\n[FMU Validator] ---- Looking to see if YAML config file exists ----")
 
         # use convention to search for config file
         config_file = self.sim_config_filepath
-        print("config_file --> ", config_file)
-
-        if os.path.isfile(config_file):
-            print("Sim config file for selected example was found: {}\n".format(config_file))
-
-            # Open and extract sim config from YAML file
-            with open(config_file, 'r') as file:
-                #data = yaml.dump(config_file, Loader=yaml.FullLoader)
-                simulation_config = yaml.load(file, Loader=yaml.FullLoader)
-            
-            if 'simulation' not in simulation_config.keys():
-                print("Configuration file for selected example does not have a 'simulation' tag, thus it is omited.")
-                return False
-
-            # Extract sim configuration from dict
-            sim_config_params = simulation_config['simulation']['config_params']
-            sim_inputs = simulation_config['simulation']['inputs']
-            sim_outputs = simulation_config['simulation']['outputs']
-            sim_other_vars = simulation_config['simulation']['other_vars']
-
-            # Validate values extracted
-            if len(sim_inputs) == 0:
-                print("Sim config file has no sim-input states, and thus cannot be used\n")
-            elif len(sim_outputs) == 0:
-                print("Sim config file has no sim-output states, and thus cannot be used\n")
-            else:
-                # Store data extracted as attributes
-                self.sim_config_params = sim_config_params
-                self.sim_inputs = sim_inputs
-                self.sim_outputs = sim_outputs
-                self.sim_other_vars = sim_other_vars
-                return True
         
+        if not os.path.isfile(config_file):
+            print("[FMU Validator] Configuration file for selected example was NOT found: {}".format(config_file))
+            return False
+
+        print("[FMU Validator] Sim config file for selected example was found: {}\n".format(config_file))
+
+        # Open and extract sim config from YAML file
+        with open(config_file, 'r') as file:
+            #data = yaml.dump(config_file, Loader=yaml.FullLoader)
+            simulation_config = yaml.load(file, Loader=yaml.FullLoader)
+            
+        if 'simulation' not in simulation_config.keys():
+            print("[FMU Validator] Configuration file for selected example does not have a 'simulation' tag, thus it is omited.")
+            return False
+
+        # Extract sim configuration from dict
+        sim_config_params = simulation_config['simulation']['config_params']
+        sim_inputs = simulation_config['simulation']['inputs']
+        sim_outputs = simulation_config['simulation']['outputs']
+        sim_other_vars = simulation_config['simulation']['other_vars']
+
+        # Validate values extracted
+        if len(sim_inputs) == 0:
+            print("[FMU Validator] Sim config file has no sim-input states, and thus cannot be used\n")
+        elif len(sim_outputs) == 0:
+            print("[FMU Validator] Sim config file has no sim-output states, and thus cannot be used\n")
         else:
-            print("Configuration file for selected example was NOT found: {}".format(config_file))
+            # Store data extracted as attributes
+            self.sim_config_params = sim_config_params
+            self.sim_inputs = sim_inputs
+            self.sim_outputs = sim_outputs
+            self.sim_other_vars = sim_other_vars
+            return True
 
         return False
 
@@ -219,9 +247,9 @@ class FMUSimValidation:
         
         # Validate values extracted
         if len(sim_inputs) == 0:
-            print("\nSim FMU description file has no sim-input states, and thus cannot be used.")
+            print("\n[FMU Validator] Sim FMU description file has no sim-input states, and thus cannot be used.")
         elif len(sim_outputs) == 0:
-            print("\nSim FMU description file has no sim-output states, and thus cannot be used.")
+            print("\n[FMU Validator] Sim FMU description file has no sim-output states, and thus cannot be used.")
         else:
             # Store data extracted as attributes
             self.sim_config_params = sim_config_params
@@ -281,11 +309,11 @@ class FMUSimValidation:
             file.write( dump )
 
         # Raise error, and avoid continuing using model
-        log  = "\nA YAML file with bonsai required fields, as well as available "
+        log  = "\n[FMU Validator] A YAML file with bonsai required fields, as well as available "
         log += "sim variables, has been dumped to: \n   --> '{}'\n".format(config_file)
         
         if is_aux_yaml:
-            log += "Edit the YAML file, and remove the '_EDIT' nametag to use this model."
+            log += "[FMU Validator] Edit the YAML file, and remove the '_EDIT' nametag to use this model.\n"
         
         print(log)
 
@@ -296,7 +324,7 @@ class FMUSimValidation:
         """Get string with the sim's config_params, inputs, and outputs for the model
         """
 
-        log  = "The found set of configuration_parameters, inputs, and outputs is the following:\n"
+        log  = "[FMU Validator] The set of configuration_parameters, inputs, and outputs defined is the following:\n"
         log += "\n{}:  {}".format("Sim Config Params  --  Brain Config      ", self.sim_config_params)
         log += "\n{}:  {}".format("Sim Inputs         --  Brain Actions     ", self.sim_inputs)
         log += "\n{}:  {}".format("Sim Outputs        --  Brain States      ", self.sim_outputs)
@@ -331,6 +359,7 @@ class FMUConnector:
         stop_time = STOP_TIME,
         step_size = STEP_SIZE,
         user_validation: bool = False,
+        use_unzipped_model: bool = False,
     ):
         """Template for simulating FMU models for Bonsai integration.
 
@@ -339,11 +368,11 @@ class FMUConnector:
         Parameters
         ----------
         model_filepath: str
-            Filepath to FMU model.
+            Full filepath to FMU model.
         fmi_version: str
             FMI version (1.0, 2.0, 3.0).
-              [TODO] Automate reading value from model_description.
-                <fmiModelDescription> tag is not accessible from model_description.
+                fmi_version from model_description to use in case fmi_version cannot
+                be read from model.
         start_time: float
             Timestep to start the simulation from (in time units).
         stop_time: float
@@ -354,6 +383,10 @@ class FMUConnector:
             If True, model inputs/outputs need to be accepted by user for each run.
             If False, YAML config file is used (if exists and valid). Otherwise, FMI
               file is read. If FMI model description is also invalid, error is raised.
+        use_unzipped_model: bool
+            If True, model unzipping is not performed and unzipped version of the model
+            is used. Useful to test changes to unzipped FMI model.
+              Note, unzipping is performed if unzipped version is not found.
         """
 
         # validate simulation: config_vars (optional), inputs, and outputs
@@ -363,20 +396,38 @@ class FMUConnector:
         self.model_filepath = validated_sim.model_filepath
         self.sim_config_filepath = validated_sim.sim_config_filepath
         self.model_description = validated_sim.model_description
+        # model variable names structured per type (config, inputs/brain actions, outputs/brain states)
         self.sim_config_params = validated_sim.sim_config_params
         self.sim_inputs = validated_sim.sim_inputs
         self.sim_outputs = validated_sim.sim_outputs
         self.sim_other_vars = validated_sim.sim_other_vars
+        # model variable dictionaries with
+        self.vars_to_idx = validated_sim.vars_to_idx
+        self.vars_to_type_f = validated_sim.vars_to_type_f
+        self.vars_to_ini_vals = validated_sim.vars_to_ini_vals
 
-        # get model name
-        self.model_name = os.path.basename(self.model_filepath).replace(".fmu", "")
+        # get parent directory and model name (without .fmu)
+        aux_head_and_tail_tup = os.path.split(self.model_filepath)
+        self.model_dir = aux_head_and_tail_tup[0]
+        self.model_name = aux_head_and_tail_tup[1].replace(".fmu", "")
+
         # placeholder to prevent accessing methods if initialization hasn't been called first
         self._is_initialized = False
+        # placeholder to prevent calling self.fmu.terminate() if termination has already been applied
+        self._is_terminated = True
         
         # get FMI version
-        assert fmi_version in ["1.0", "2.0", "3.0"], "fmi version provided ({}) is invalid.".format(fmi_version)
-        self.fmi_version = fmi_version #[TODO] Review:: self.model_description.fmiModelDescription.fmiVersion
-        
+        read_fmi_version = self.model_description.fmiVersion
+        if read_fmi_version in ["1.0", "2.0", "3.0"]:
+            # Use fmi version from model_description
+            print(f"[FMU Connector] FMU model indicates to be follow fmi version '{read_fmi_version}'.")
+            self.fmi_version = read_fmi_version
+        else:
+            assert fmi_version in ["1.0", "2.0", "3.0"], f"fmi version provided ({fmi_version}) is invalid."
+            # Use fmi version provided by user if the one on model_description is invalid
+            print(f"[FMU Connector] Using fmi version provided by user: v'{fmi_version}'. Model indicates v'{read_fmi_version}' instead.")
+            self.fmi_version = fmi_version
+
         # save time-related data
         error_log = "Stop time provided ({}) is lower than start time provided ({})".format(stop_time, start_time)
         assert stop_time > start_time, error_log
@@ -391,43 +442,32 @@ class FMUConnector:
         # retrieve FMU model type, as well as model identifier
         self.model_type = "None"
         self.model_identifier = self.model_name
-        modelExchange = self.model_description.modelExchange
-        if modelExchange is not None:
-            self.model_identifier = modelExchange.modelIdentifier
-            self.model_type = "modelExchange"
+        coSimulation = self.model_description.coSimulation
+        if coSimulation is not None:
+            self.model_identifier = coSimulation.modelIdentifier
+            self.model_type = "coSimulation"
         else:
-            coSimulation = self.model_description.coSimulation
-            if coSimulation is not None:
-                self.model_identifier = coSimulation.modelIdentifier
-                self.model_type = "coSimulation"
+            scheduledExecution = self.model_description.scheduledExecution
+            if scheduledExecution is not None:
+                self.model_identifier = scheduledExecution.modelIdentifier
+                self.model_type = "scheduledExecution"
             else:
-                scheduledExecution = self.model_description.scheduledExecution
-                if scheduledExecution is not None:
-                    self.model_identifier = scheduledExecution.modelIdentifier
-                    self.model_type = "scheduledExecution"
+                modelExchange = self.model_description.modelExchange
+                if modelExchange is not None:
+                    self.model_identifier = modelExchange.modelIdentifier
+                    self.model_type = "modelExchange"
                 else:
                     raise Exception("Model is not of any known type: coSimulation, scheduledExecution, nor modelExchange")
-        
-
-        # collect the value references (indices)
-        self.var_to_idx = {}
-        for variable in self.model_description.modelVariables:
-            self.var_to_idx[variable.name] = variable.valueReference
-
-        # collect vars that need to be initialized before running
-        self.vars_to_be_initialized = {}
-        for variable in self.model_description.modelVariables:
-            # Addditional notes:
-            # - variable.start <==> variable.initial != "calculated"
-            # - variable.start <==> variable.initial == "approx" or "exact"
-            if variable.start is not None:
-                # We assume all variables will be float from now
-                # [TODO] Handle other variable types (read type from modelDescription.xls)
-                self.vars_to_be_initialized[variable.name] = float(variable.start)
 
         
         # extract the FMU
-        self.unzipdir = extract(self.model_filepath)
+        extract_path = os.path.join(self.model_dir, self.model_name + "_unzipped")
+        if not use_unzipped_model:
+            # extract model to subfolder by default
+            self.unzipdir = extract(self.model_filepath, unzipdir=extract_path)
+        else:
+            # use previouslly unzipped model
+            self.unzipdir = extract_path
 
         # get unique identifier using timestamp for instance_name (possible conflict with batch)
         self.instance_name = self._get_unique_id()
@@ -436,8 +476,10 @@ class FMUConnector:
         # ---------------------------------------------------------------
         # instance model depending on 'fmi version' and 'fmu model type'
         self.fmu = None
+        print(f"[FMU Connector] Model has been determined to be of type '{self.model_type}' with fmi version == '{self.fmi_version}'.")
         if self.model_type == "modelExchange":
             ## [TODO] test integrations
+            print(f"[FMU Connector] Simulator hasn't been tested for '{self.model_type}' models with fmi version == '{self.fmi_version}'.")
             if self.fmi_version == "1.0":
                 self.fmu = fmi1.FMU1Model(guid=self.model_description.guid,
                                           unzipDirectory=self.unzipdir,
@@ -456,6 +498,7 @@ class FMUConnector:
         elif self.model_type == "coSimulation":
             if self.fmi_version == "1.0":
                 ## [TODO] test integrations
+                print(f"[FMU Connector] Simulator hasn't been tested for '{self.model_type}' models with fmi version == '{self.fmi_version}'.")
                 self.fmu = fmi1.FMU1Slave(guid=self.model_description.guid,
                                           unzipDirectory=self.unzipdir,
                                           modelIdentifier=self.model_identifier,
@@ -467,14 +510,16 @@ class FMUConnector:
                                           instanceName=self.instance_name)
             elif self.fmi_version == "3.0":
                 ## [TODO] test integrations
+                print(f"[FMU Connector] Simulator hasn't been tested for '{self.model_type}' models with fmi version == '{self.fmi_version}'.")
                 self.fmu = fmi3.FMU3Slave(guid=self.model_description.guid,
                                           unzipDirectory=self.unzipdir,
                                           modelIdentifier=self.model_identifier,
                                           instanceName=self.instance_name)
         elif self.model_type == "scheduledExecution":
             if self.fmi_version == "1.0" or self.fmi_version == "2.0":
-                raise Exception("scheduledExecution type only exists in fmi_v3, but fmi version '{}' was provided.".format(self.fmi_version))
+                raise Exception("scheduledExecution type only exists in fmi v'3.0', but fmi version '{}' was provided.".format(self.fmi_version))
             
+            print(f"[FMU Connector] Simulator hasn't been tested for '{self.model_type}' models with fmi version == '{self.fmi_version}'.")
             ## [TODO] test integrations
             #elif self.fmi_version_int == 3:
             self.fmu = fmi3.FMU3ScheduledExecution(guid=self.model_description.guid,
@@ -489,7 +534,6 @@ class FMUConnector:
 
     def initialize_model(self, config_param_vals = None):
         """Initialize model in the sequential manner required.
-            [TODO] Add config initialization here.
         """
         self._is_initialized = True
 
@@ -531,7 +575,7 @@ class FMUConnector:
         self._model_has_been_initialized("reset")
 
         # Terminate and re-initialize
-        self.fmu.terminate()
+        self._terminate_model()
         self.initialize_model(config_param_vals)
         return
 
@@ -543,9 +587,9 @@ class FMUConnector:
         # Ensure model has been initialized at least once
         self._model_has_been_initialized("close_model")
 
-        # [TODO] perform 'terminate' check prior to applying termination.
-        # otherwise, an error is raised.
-        #self.fmu.terminate()
+        # terminate fmu model
+        # - avoids error from calling self.fmu.terminate if termination has already been performed
+        self._terminate_model()
 
         # free fmu
         self.fmu.freeInstance()
@@ -660,7 +704,7 @@ class FMUConnector:
 
         # Take of any other variables that require initialization
         print("[_apply_config] Apply additional required initializations.")
-        non_initialized_vars = [var_tuple for var_tuple in self.vars_to_be_initialized.items() \
+        non_initialized_vars = [var_tuple for var_tuple in self.vars_to_ini_vals.items() \
                                           if var_tuple[0] not in config_param_vals.keys()]
         vars_to_initialize_d = dict(non_initialized_vars)
         applied_init_bool = self._set_variables(vars_to_initialize_d)
@@ -726,7 +770,11 @@ class FMUConnector:
             return False
 
         # Extract values for valid inputs (found on model variables)
-        sim_input_vals = [b_input_vals[sim_input_name] for sim_input_name in sim_input_names]
+        sim_input_vals = []
+        for sim_input_name in sim_input_names:
+            # Cast to correct var type prior to appending
+            sim_input_casted = self.vars_to_type_f[sim_input_name](b_input_vals[sim_input_name])
+            sim_input_vals.append(sim_input_casted)
 
         # Update inputs to the brain
         self.fmu.setReal(sim_input_indices, sim_input_vals)
@@ -776,4 +824,29 @@ class FMUConnector:
             error_log += "to calling '{}' method.".format(method_name)
             raise Exception(error_log)
 
+
+    def _terminate_model(self):
+        """Ensure model has been initialized at least once.
+        """
+
+        # Ensure model has been initialized at least once
+        self._model_has_been_initialized("_terminate_model")
+
+        if self._is_terminated:
+            print("[_terminate_model] Model has already been terminated. Skipping termination.")
+            return
         
+        # Terminate instance
+        self.fmu.terminate()
+
+        return
+
+
+    # [TODO] Uncomment function once we figure out what is the correct value for required arg "kind".
+    # [TODO] Then, use method to define halt condition when an unexpected state is reached (in halt clause).
+    #def getStatus(self):
+    #    """Check current FMU status.
+    #    """
+    #    return self.fmu.getState(kind=)
+
+    
