@@ -11,7 +11,12 @@ The SDK supports the following versions of Python:
 
 - Python 3 versions 3.7 and later
 
-This FMU Connector relies on 2 auxiliary packages*:
+**Each example might have additional requirements.** At this point, the examples covered by this connector require win64 processors.
+Thus, they cannot run on Linux\Mac. If you run Linux or Mac, feel free to perform the scaled approach using a Windows image.
+
+- These requirements exist due to the executables integrated within the model itself. They are extrinsic to Bonsai or this connector.
+
+Lastly, note that this FMU Connector relies on 2 auxiliary packages*:
 
 1. [Microsoft Bonsai API](https://github.com/microsoft/microsoft-bonsai-api) - This API manages the connection to the Bonsai Azure Service.
 

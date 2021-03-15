@@ -31,27 +31,37 @@ Go to this project's [README.md](../../README.md) to review:
 - INSTALLATIONS REQUIRED (conda & setting environment up)
 - SETTING UP BONSAI CONFIGURATION
 
+***Note, this example only runs in win64***
+
 ## Running the model: Local simulator
 
 Open an Anaconda Prompt window.
 
-1. Point to the "samples" folder and get inside any of the proposed examples
+1. Activate Anaconda environment:
 
-2. Create a new brain and push INK file:
+    > conda activate fmu_env
+
+2. Point to the "samples" folder and get inside any of the proposed examples
+
+3. Create a new brain and push INK file:
 
     > bonsai brain create -n fmu_brain_flomaster_v0
     > 
     > bonsai brain version update-inkling -f machine_teacher.ink -n fmu_brain_flomaster_v0
 
-3. Start simulator using:
+4. Start simulator using:
 
     > python main.py
 
-4. Start brain training from CLI
+5. Open a new Anaconda Prompt and activate the environment too
+
+    > conda activate fmu_env
+
+6. Start brain training from CLI
 
     > bonsai brain version start-training -n fmu_brain_flomaster_v0
 
-5. Connect simulators to unmanaged local sim:
+7. Connect simulators to unmanaged local sim:
 
     > bonsai simulator unmanaged connect -b fmu_brain_flomaster_v0 -a Train -c ReachTargetPipeflow --simulator-name FlomasterPipeline
 

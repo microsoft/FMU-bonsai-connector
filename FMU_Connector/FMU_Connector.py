@@ -158,7 +158,8 @@ class FMUSimValidation:
         
         # If neither YAML nor FMI model is sufficient raise error
         error_log  = "MODEL DOES NOT HAVE THE CORRECT CONFIG DEFINED NEITHER ON YAML CONFIG FILE "
-        error_log += "NOR FMI MODEL DESCRIPTION."
+        error_log += "NOR FMI MODEL DESCRIPTION. A YAML FILE HAS BEEN CREATED FOR YOU TO MODIFY. "
+        error_log += "THE SIM HAS BEEN FORCED TO EXIT, BUT FEEL FREE TO RERUN ONCE SET-UP IS COMPLETED."
         raise Exception(error_log)
         
 
@@ -310,7 +311,7 @@ class FMUSimValidation:
 
         # Raise error, and avoid continuing using model
         log  = "\n[FMU Validator] A YAML file with bonsai required fields, as well as available "
-        log += "sim variables, has been dumped to: \n   --> '{}'\n".format(config_file)
+        log += "sim variables, has been created at: \n   --> '{}'\n".format(config_file)
         
         if is_aux_yaml:
             log += "[FMU Validator] Edit the YAML file, and remove the '_EDIT' nametag to use this model.\n"
