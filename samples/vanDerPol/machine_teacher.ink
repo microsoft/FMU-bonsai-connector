@@ -85,10 +85,7 @@ graph (input: ObservableState) {
                 Algorithm: "SAC",
             }
 
-            # The objective of training is expressed as 3 goals
-            # (1) drive concentration close to reference
-            # (2) avoid temperature going beyond limit
-            # (3) avoid temperature changing too fast (accomplished with max action value)
+            # The objective of training is to minimize the values of x0 and x1.
             goal (State: SimState) {
                 minimize `Oscillation`: 
                     Math.Abs(State.x0)+Math.Abs(State.x1) in Goal.RangeBelow(1)
