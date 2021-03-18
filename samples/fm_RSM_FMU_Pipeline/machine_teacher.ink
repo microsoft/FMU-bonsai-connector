@@ -70,10 +70,7 @@ graph (input: SimState) {
                 Algorithm: "SAC",
             }
 
-            # The objective of training is expressed as 3 goals
-            # (1) drive concentration close to reference
-            # (2) avoid temperature going beyond limit
-            # (3) avoid temperature changing too fast (accomplished with max action value)
+            # The objective of training is to match the fluid velocity to the target value.
             goal (State: SimState) {
                 minimize `ErrorToTargetFlow`: 
                     Math.Abs(State.o1_out_fluid_velocity - target_flow) in Goal.RangeBelow(0.000005)

@@ -1,9 +1,7 @@
 # FMU Example: Van der Pol
 
 This simulator simulates a Van der Pol frequency response. It is not a steady-state simulator.
-The brain will learn to 
-learns to parametrize the correct input pipe pressure and diameter to drive the steady-state
-simulation to a specific output value on "flow rate".
+The brain will learn to adjust an input parameter to control the oscillator.
 
 ## States
 
