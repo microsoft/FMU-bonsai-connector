@@ -1,0 +1,21 @@
+FROM python:3.7.3-windowsservercore-1809
+
+# $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+ENV EXAMPLE_FOLDER=fm_RSM_FMU_Pipeline
+
+WORKDIR /src
+COPY ./samples/$EXAMPLE_FOLDER /src/samples/main_example
+COPY ./FMU_Connector/FMU_Connector.py /src/FMU_Connector/FMU_Connector.py
+ADD ./samples/$EXAMPLE_FOLDER/requirements.txt /src/samples/main_example/requirements.txt
+
+RUN pip install --upgrade pip --user
+RUN pip3 install setuptools wheel
+RUN pip3 install -r /src/samples/main_example/requirements.txt
+# update certificates:
+RUN certutil -generateSSTFromWU roots.sst
+RUN certutil -addstore -f root roots.sst
+RUN del roots.sst
+
+CMD ["python .\samples\main_example\main.py"]
