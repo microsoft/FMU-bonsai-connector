@@ -3,6 +3,8 @@
 This simulator simulates a Van der Pol frequency response. It is not a steady-state simulator.
 The brain will learn to adjust an input parameter to control the oscillator.
 
+The simulator is implemented by [vanDerPol.fmu](https://github.com/modelica/fmi-cross-check/blob/master/fmus/2.0/cs/win64/FMUSDK/2.0.4/vanDerPol/vanDerPol.fmu) from the FMI Cross-Check repository.
+
 ## States
 
 | State         | Range            | Notes    |
