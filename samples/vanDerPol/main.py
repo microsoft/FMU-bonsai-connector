@@ -31,7 +31,7 @@ log_path = "logs"
 
 # TODO_PER_SIM 10: Turn to False after model in/out config vars have been verified
 # - You can turn this off once you are satisfied with the config saved to "sim\{model_name}_conf.yaml"
-FIRST_TIME_RUNNING = True
+FIRST_TIME_RUNNING = False
 
 # TODO_PER_SIM 1: read FMI version from modelDescription.xml
 # - you can manually unzip the folder to check, or run with FMI_VERSIOn=2.0, and get it unpacked
@@ -376,7 +376,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config-setup",
         type=lambda x: bool(strtobool(x)),
-        default=False,
+        default=True,
         help="Use a local environment file to setup access keys and workspace ids",
     )
     parser.add_argument(

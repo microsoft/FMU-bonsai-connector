@@ -1,0 +1,10 @@
+simulation:
+  config_params:
+  - mu
+  inputs:
+  - x0
+  outputs:
+  - derx0
+  - x1
+  - derx1
+  other_vars: []

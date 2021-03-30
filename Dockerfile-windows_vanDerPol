@@ -2,7 +2,7 @@
 FROM mcr.microsoft.com/windows:10.0.17763.1040
 
 # Set-up example folder to run MUST BE LOCATED AT FMU-connector-main\samples\
-ENV EXAMPLE_FOLDER=fm_RSM_FMU_Pipeline
+ENV EXAMPLE_FOLDER=vanDerPol
 
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
