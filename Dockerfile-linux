@@ -1,7 +1,7 @@
 FROM python:3.7.4
 
 # Set-up example folder to run MUST BE LOCATED AT FMU-connector-main\samples\
-ENV EXAMPLE_FOLDER=fm_RSM_FMU_Pipeline
+ENV EXAMPLE_FOLDER=vanDerPol
 
 # Install libraries and dependencies
 RUN apt-get update && \

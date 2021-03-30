@@ -9,10 +9,12 @@ The simulator is implemented by [vanDerPol.fmu](https://github.com/modelica/fmi-
 
 | State         | Range            | Notes    |
 | ------------- | ---------------- | -------- |
-| x0            | [-Inf ... Inf]   | First direction of a Van der Pol system. |
-| x1            | [-Inf ... Inf]   | Second position of a Van der Pol system. |
+| x0            | [-Inf ... Inf]   | Main direction of oscillation of a Van der Pol system. |
+| x1            | [-Inf ... Inf]   | Second direction of oscillation of a Van der Pol system. |
 | derx0         | [-Inf ... Inf]   | Speed on first direction. |
 | derx1         | [-Inf ... Inf]   | Speed on second direction. |
+
+Note, the main behavior of a Van der Pol system is that x1, will oscillate with same magnitude than the speed in x0 (derx0).
 
 ## Actions
 
@@ -20,11 +22,16 @@ The simulator is implemented by [vanDerPol.fmu](https://github.com/modelica/fmi-
 | ------------------- | -------------------- | -------- |
 | x0_adjust           | [-0.2 ... 0.2]       | Adjustment on first direction of Van der Pol system. |
 
+In this Bonsai theoretical approach to the Van der Pol problem, it is assumed that we can perform small perturbations in only one of the directions (in x0).
+The goal of the brain will be minimizing the oscillation as much as possible, adjusting to variable configuration parameters (see section bellow).
+
 ## Configuration Parameters
 
 | State               | Range                | Notes    |
 | ------------------- | -------------------- | -------- |
 | mu                  | [0.5 ... 4]          | Oscillation parameter. |
+
+This parameter will change the response of x1 to x0. Changing this parameter during training should further ensure we generalize to different scenarios (avoiding overfitting).
 
 ## Setting up: Installation & Bonsai configuration
 
@@ -55,9 +62,9 @@ Open an Anaconda Prompt window.
 
     > python main.py
 
-    - By default, you will have to verify the set of {inputs/outputs/config params} is correct.
+    - Note, for new examples, you will have to verify the set of {inputs/outputs/config params} is correct.
     - Check the CMD Prompt to follow instructions.
-    - The moment you answer 'y' once, the config will be validated
+    - The moment you answer 'y' at least once, the config will be validated.
     - You can disable being prompted again by setting FIRST_TIME_RUNNING to False in main.py:
 
     > FIRST_TIME_RUNNING = False
@@ -80,7 +87,7 @@ The Bonsai workspace should show the FMU simulator name under the Simulators sec
 ## Running the model: Scaling your simulator
 
 Once you have confirmed input/outputs of the model through command prompt, you can go ahead and disable authentication.
-Open [main.py](main.py) and set FIRST_TIME_RUNNING to False:
+Open [main.py](main.py) and set FIRST_TIME_RUNNING to False (remember to set this to False, when transferring this examples to new models):
 
 > FIRST_TIME_RUNNING = False
 
@@ -90,7 +97,7 @@ once variable is set to False. In our case the sim configuration should be locat
 
 Then, on an Anaconda Prompt window
 
-1. Go to the "samples\fm_RSM_FMU_Pipeline" folder
+1. Go to the "samples\vanDerPol" folder
 
 2. Create a new brain and push INK file:
 
@@ -98,6 +105,7 @@ Then, on an Anaconda Prompt window
     > 
     > bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
 
+3. Log in into Azure and push image
 3. Log in into Azure and push image
 
     > az login
