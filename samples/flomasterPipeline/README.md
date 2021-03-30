@@ -77,11 +77,11 @@ Open [main.py](main.py) and set FIRST_TIME_RUNNING to False:
 
 - This step ensures the image is not waiting for user input to start the simulation. Config file approved by user is used.
 once variable is set to False. In our case the sim configuration should be located at:
-[sim/fm_RSM_FMU_Pipeline_conf.yaml](sim/fm_RSM_FMU_Pipeline_conf.yaml)
+[sim/flomasterPipeline_conf.yaml](sim/flomasterPipeline_conf.yaml)
 
 Then, on an Anaconda Prompt window
 
-1. Go to the "samples\fm_RSM_FMU_Pipeline" folder
+1. Go to the "samples\flomasterPipeline" folder
 
 2. Create a new brain and push INK file:
 
