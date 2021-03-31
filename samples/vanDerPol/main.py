@@ -376,7 +376,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config-setup",
         type=lambda x: bool(strtobool(x)),
-        default=False,
+        default=True,
         help="Use a local environment file to setup access keys and workspace ids",
     )
     parser.add_argument(

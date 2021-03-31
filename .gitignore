@@ -1,8 +1,15 @@
 # Visual Studio cache/options directory
 .vs/
 
-# Cached Python bytecode
-__pycache__/
+*.DS_Store
+*node_modules
+**/bin/*
+**/obj/*
+.vscode/*
+
+# Add ignore files here as needed based on the language/tools that are used in the connector...
+.env
+**/__pycache__/*
 
 # Cached unzipped FMU contents
 *_unzipped/

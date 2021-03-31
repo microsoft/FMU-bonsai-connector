@@ -402,7 +402,6 @@ class FMUConnector:
         self.sim_outputs = validated_sim.sim_outputs
         self.sim_other_vars = validated_sim.sim_other_vars
         # model variable dictionaries with
-        print("AAAAAAAAA1", validated_sim.vars_to_idx)
         self.vars_to_idx = validated_sim.vars_to_idx
         self.vars_to_type_f = validated_sim.vars_to_type_f
         self.vars_to_ini_vals = validated_sim.vars_to_ini_vals

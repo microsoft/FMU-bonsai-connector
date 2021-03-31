@@ -1,0 +1,28 @@
+FROM python:3.7.4
+
+# Set-up example folder to run MUST BE LOCATED AT FMU-connector-main\samples\
+ENV EXAMPLE_FOLDER=vanDerPol
+
+# Install libraries and dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install libraries and dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends
+    
+# Setting up main folder
+WORKDIR /src
+
+# Transferring folders up
+COPY ./samples/$EXAMPLE_FOLDER /src/samples/main_example
+COPY ./FMU_Connector/FMU_Connector.py /src/FMU_Connector/FMU_Connector.py
+COPY ./samples/$EXAMPLE_FOLDER/requirements.txt /src/samples/main_example/requirements.txt
+COPY ./samples/$EXAMPLE_FOLDER/.env /src/.env
+
+# Install simulator dependencies
+RUN pip3 install -r requirements.txt
+
+# # This will be the command to run the simulator
+CMD "python3 .\samples\main_example\main.py"

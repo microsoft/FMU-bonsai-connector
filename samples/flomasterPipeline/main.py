@@ -59,7 +59,7 @@ class FMUSimulatorSession:
     def __init__(
         self,
         modeldir: str = "sim\\fm_RSM_FMU_Pipeline.fmu",
-        env_name: str = "FlomasterPipeline",
+        env_name: str = "flomasterPipeline",
         log_file: Union[str, None] = None,
     ):
         """Template for simulating FMU models with FMUConnector
@@ -371,7 +371,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config-setup",
         type=lambda x: bool(strtobool(x)),
-        default=False,
+        default=True,
         help="Use a local environment file to setup access keys and workspace ids",
     )
     parser.add_argument(

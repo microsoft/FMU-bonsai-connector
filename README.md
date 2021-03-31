@@ -20,7 +20,11 @@ Lastly, note that this FMU Connector relies on 2 auxiliary packages*:
 
 1. [Microsoft Bonsai API](https://github.com/microsoft/microsoft-bonsai-api) - This API manages the connection to the Bonsai Azure Service.
 
+    - This software has been released under the same MIT License than this repository by the Bonsai team too.
+
 2. [FMPy](https://github.com/CATIA-Systems/FMPy) - This library automates the interaction with FMU models following the [FMI Standard](https://fmi-standard.org/).
+
+    > See [LICENSE_FMPY](LICENSE_FMPY) for License info.
 
 *For more information check the readme at:
 > [FMU-bonsai-connector\FMU_Connector\README.md](FMU_Connector/README.md)
@@ -34,23 +38,14 @@ This software will take care of handling your virtual environments and packages 
 
 **Get Your Conda Environment Ready**
 
-> conda env create --file environment.yml
+    conda env create --file environment.yml
 - A new environment called "fmu_env" should be ready to be used with any of the samples provided.
 
 **Setting up Bonsai configuration**
 
 Choose either of the following two approaches:
 
-1. Set-up through environment variables (for all examples):
-
-    - open File Explorer > right click over My PC > Properties > Advance System Settings > Advanced tab > Environment Variables...
-    - Add bonsai config vars** clicking on "New..." under User variables:
-    
-      > SIM_WORKSPACE="abcdefgh-ijkl-lmno-pqrs-tuvwxyz12345"
-      >
-      > SIM_ACCESS_KEY="AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTT..."
-
-2. Set-up through .env file (per example):
+1. Set-up through .env file (per example):
 
     - inside the example folder (where main.py is located), drop a .env file with the corresponding bonsai config parameters**:
     
@@ -69,7 +64,7 @@ For setting up a new simulator follow the next steps:
 
 1. Copy either of the example folders and rename to your own example name
 2. Remove all files within the "sim" folder, and drop your FMU model
-3. Upate [main.py](samples/fm_RSM_FMU_Pipeline/main.py) (read section bellow)
+3. Upate [main.py](samples/vanDerPol/main.py) (read section bellow)
 4. Update machine_teacher.ink
 5. Update README.md before sharing/uploading your model
 
