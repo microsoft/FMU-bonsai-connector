@@ -31,7 +31,7 @@ log_path = "logs"
 
 # TODO_PER_SIM 10: Turn to False after model in/out config vars have been verified
 # - You can turn this off once you are satisfied with the config saved to "sim\{model_name}_conf.yaml"
-FIRST_TIME_RUNNING = False
+FIRST_TIME_RUNNING = True
 
 # TODO_PER_SIM 1: read FMI version from modelDescription.xml
 # - you can manually unzip the folder to check, or run with FMI_VERSIOn=2.0, and get it unpacked
@@ -59,7 +59,7 @@ class FMUSimulatorSession:
     def __init__(
         self,
         modeldir: str = "sim\\fm_RSM_FMU_Pipeline.fmu",
-        env_name: str = "FlomasterPipeline",
+        env_name: str = "flomasterPipeline",
         log_file: Union[str, None] = None,
     ):
         """Template for simulating FMU models with FMUConnector

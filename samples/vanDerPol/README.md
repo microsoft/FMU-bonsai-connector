@@ -48,19 +48,18 @@ Open an Anaconda Prompt window.
 
 1. Activate Anaconda environment:
 
-    > conda activate fmu_env
+        conda activate fmu_env
 
 2. Point to the "samples" folder and get inside any of the proposed examples
 
 3. Create a new brain and push INK file:
 
-    > bonsai brain create -n vanDerPol_v0
-    > 
-    > bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
+        bonsai brain create -n vanDerPol_v0
+        bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
 
 4. Start simulator using:
 
-    > python main.py
+        python main.py
 
     - Note, for new examples, you will have to verify the set of {inputs/outputs/config params} is correct.
     - Check the CMD Prompt to follow instructions.
@@ -71,15 +70,15 @@ Open an Anaconda Prompt window.
 
 5. Open a new Anaconda Prompt and activate the environment too
 
-    > conda activate fmu_env
+        conda activate fmu_env
 
 6. Start brain training from CLI
 
-    > bonsai brain version start-training -n vanDerPol_v0
+        bonsai brain version start-training -n vanDerPol_v0
 
 7. Connect simulators to unmanaged local sim:
 
-    > bonsai simulator unmanaged connect -b vanDerPol_v0 -a Train -c ReduceOscillation --simulator-name VanDerPol_Oscillations
+        bonsai simulator unmanaged connect -b vanDerPol_v0 -a Train -c ReduceOscillation --simulator-name VanDerPol_Oscillations
 
 If the simulation is running successfully, command line output should print "Registered simulator".
 The Bonsai workspace should show the FMU simulator name under the Simulators section, listed as Unmanaged.
@@ -101,28 +100,35 @@ Then, on an Anaconda Prompt window
 
 2. Create a new brain and push INK file:
 
-    > bonsai brain create -n vanDerPol_v0
-    > 
-    > bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
+        bonsai brain create -n vanDerPol_v0
+        bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
 
-3. Log in into Azure and push image
-3. Log in into Azure and push image
+3. Go back to FMU-bonsai-connector root
+4. Log in into Azure and push image
 
-    > az login
-    > 
-    > az acr build --image fmu_image_vanDerPol:1 --platform windows --file Dockerfile-windows --registry <ACR_REGISTRY_NAME> .
+       az login
+       az acr build --image fmu_image_vanderpol:1 --platform windows --file Dockerfile-windows_vanDerPol --registry <ACR_REGISTRY_NAME> .
 
     *Note, ACR Registry can be extracted from preview.bons.ai --> Workspace ACR path == <ACR_REGISTRY_NAME>.azurecr.io
 
-4. Click over "Add Sim" > "Other", and insert the location of the image:
+    *Also, feel free to rerun before troubleshooting if you find the following error:
+        
+    > "container XXX encountered an error during hcsshim::System::Start: context deadline exceeded
+    >
+    > 2021/03/20 02:10:06 Container failed during run: build. No retries remaining.
+    >
+    > failed to run step ID: build: exit status 1
+
+5. Go to preview.bons.ai
+6. Click over "Add Sim" > "Other", and insert the location of the image:
 
     - Azure Container Registry image path:  <ACR_REGISTRY_NAME>.azurecr.io/fmu_image_vanDerPol:1
 
-    - Simulator package display name:  fmu_image_vanDerPol_v1
+    - Simulator package display name:  fmu_image_vanderpol_v1
 
-5. Add package name to INK file:
+7. Add package name to INK file:
 
-    - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {_"fmu_image_vanDerPol_v1"_}"
+    - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {_"fmu_image_vanderpol_v1"_}"
 
 ** Check [adding a training simulator to your Bonsai workspace](https://docs.microsoft.com/en-us/bonsai/guides/add-simulator?tabs=add-cli%2Ctrain-inkling&pivots=sim-platform-other)
 for further information about how to upload the container, add it to Bonsai, and scale the simulator.

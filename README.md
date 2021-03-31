@@ -20,7 +20,11 @@ Lastly, note that this FMU Connector relies on 2 auxiliary packages*:
 
 1. [Microsoft Bonsai API](https://github.com/microsoft/microsoft-bonsai-api) - This API manages the connection to the Bonsai Azure Service.
 
+    - This software has been released under the same MIT License than this repository by the Bonsai team too.
+
 2. [FMPy](https://github.com/CATIA-Systems/FMPy) - This library automates the interaction with FMU models following the [FMI Standard](https://fmi-standard.org/).
+
+    > See [LICENSE_FMPY](LICENSE_FMPY) for License info.
 
 *For more information check the readme at:
 > [FMU-bonsai-connector\FMU_Connector\README.md](FMU_Connector/README.md)
@@ -34,7 +38,7 @@ This software will take care of handling your virtual environments and packages 
 
 **Get Your Conda Environment Ready**
 
-> conda env create --file environment.yml
+    conda env create --file environment.yml
 - A new environment called "fmu_env" should be ready to be used with any of the samples provided.
 
 **Setting up Bonsai configuration**
