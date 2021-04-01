@@ -13,3 +13,6 @@
 
 # Cached unzipped FMU contents
 *_unzipped/
+
+# Don't check this file in
+fm_RSM_FMU_Pipeline.fmu
