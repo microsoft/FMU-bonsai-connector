@@ -577,6 +577,10 @@ class FMUConnector:
         # Terminate and re-initialize
         self._terminate_model()
         self.initialize_model(config_param_vals)
+        
+        # Reset time
+        self.sim_time = float(self.start_time)
+
         return
 
     
