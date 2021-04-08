@@ -325,7 +325,7 @@ def main(config_setup: bool = False):
                 body=sim_state,
             )
             sequence_id = event.sequence_id
-            print("[{}] Last Event: {}".format(time.strftime("%H:%M:%S"), event.type))
+            print(f'[{time.strftime("%H:%M:%S")}] Last Event: {event.type}, Sim Time: {sim.simulator.sim_time:.3f}')
 
             # Event loop
             if event.type == "Idle":
