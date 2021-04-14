@@ -126,6 +126,8 @@ Then, on an Anaconda Prompt window
 
     - Simulator package display name:  fmu_image_vanderpol_v1
 
+    - OS: Windows
+
 7. Add package name to INK file:
 
     - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {_"fmu_image_vanderpol_v1"_}"
