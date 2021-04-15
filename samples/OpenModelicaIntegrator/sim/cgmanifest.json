@@ -1,0 +1,13 @@
+{
+    "Registrations": [ 
+        {
+            "Component": { 
+                "Type": "git",
+                // NOTE: We don't actually use this whole repository. Actually, the file that is used here is https://github.com/modelica/fmi-cross-check/blob/master/fmus/2.0/cs/win64/FMUSDK/2.0.4/vanDerPol/vanDerPol.fmu.
+                //       If you unzip vanDerPol.fmu, the _main.mtml file has the following license information: "The FMU is provided by QTronic under the BSD License."
+                "git": { "RepositoryUrl": "https://github.com/modelica/fmi-cross-check.git", "CommitHash": "c0e306ff6841c877fed2b6b3ace0f7a680b7c49a" }
+            },
+            "DevelopmentDependency":false
+        },
+    ]
+}
