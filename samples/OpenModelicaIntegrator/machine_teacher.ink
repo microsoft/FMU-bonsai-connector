@@ -4,9 +4,9 @@
 # Copyright 2021 Microsoft
 # This code is licensed under MIT license (see LICENSE for details)
 
-# FMU Integration - VanDerPol Oscillations
-# This introductory sample demonstrates how to integrate any sim 
-# released under the FMI standard.
+# FMU Integration - OpenModelica Integrator
+# This introductory sample demonstrates how to use an OpenModelica model with Bonsai
+# using the FMI standard.
 # See more at: "https://fmi-standard.org/"
 
 ###
@@ -17,56 +17,31 @@ using Math
 using Number
 using Goal
 
-# Simulation Step
-const step_size = 0.1
-# Simulation Start Time
-const start_time = 0.0
-# Simulation Stop Time
-const stop_time = 20.0
-
 # Number of iterations
-const num_iterations = (stop_time-start_time)/step_size
+const num_iterations = 20
+
+# Target value
+const target = 12
 
 # State received from the simulator after each iteration
 type SimState {
-    # x0: First state
-    x0: number,
-    # x1: Second state
-    x1: number,
-    
-    # First derivative of x0
-    derx0: number,
-    # First derivative of x1
-    derx1: number,
+    x: number,
 }
 
-
-# State which is used to train the brain
-# - set of states that the brain will have access to when deployed -
-type ObservableState {
-    # x0: First state
-    x0: number,
-    # x1: Second state
-    x1: number,
-}
-
-# Action provided as output by policy and sent as
-# input to the simulator
+# Action provided as output by policy and sent as input to the simulator
 type SimAction {
-    # Delta to be added to previous action
-    x0_adjust: number<-0.2 .. 0.2>
+    u: number<-5.0 .. 5.0>,
 }
 
 # Per-episode configuration that can be sent to the simulator.
 # All iterations within an episode will use the same configuration.
 type SimConfig {
-    # Oscillation parameter
-    mu: number<0.5 .. 4>,
+    none: 0,
 }
 
 # Define a concept graph with a single concept
-graph (input: ObservableState) {
-    concept ReduceOscillation(input): SimAction {
+graph (input: SimState) {
+    concept ReachTarget(input): SimAction {
         curriculum {
             # The source of training for this concept is a simulator that
             #  - can be configured for each episode using fields defined in SimConfig,
@@ -76,7 +51,7 @@ graph (input: ObservableState) {
             }
 
             training {
-                # Limit episodes to 90 iterations instead of the default 1000.
+                # Limit episodes to num_iterations instead of the default 1000.
                 EpisodeIterationLimit: num_iterations,
                 NoProgressIterationLimit: 750000
             }
@@ -85,19 +60,10 @@ graph (input: ObservableState) {
                 Algorithm: "SAC",
             }
 
-            # The objective of training is to minimize the values of x0 and x1.
+            # The objective of training is to match the value of x to the target value.
             goal (State: SimState) {
-                minimize `Oscillation`: 
-                    Math.Abs(State.x0)+Math.Abs(State.x1) in Goal.RangeBelow(1)
-            }
-
-            lesson `Randomize Oscillation Param` {
-                # Specify the configuration parameters that should be varied
-                # from one episode to the next during this lesson.
-                scenario {
-                    # Oscillation parameter
-                    mu: number<0.5 .. 4>
-                }
+                drive `Two`: 
+                    Math.Abs(State.x - target) in Goal.RangeBelow(0.1)
             }
         }
     }

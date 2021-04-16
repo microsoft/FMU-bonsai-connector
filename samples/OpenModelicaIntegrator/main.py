@@ -44,7 +44,7 @@ STEADY_STATE_SIM = False
 # TODO_PER_SIM 3: define start, stop, and step size
 # - stop and step size values are overwritten for steady state sims
 START_TIME = 0.0
-STOP_TIME = 20.0
+STOP_TIME = 2.0
 STEP_SIZE = 0.1
 # if steady-state sim, default to {STOP_TIME = 1.0} & {STEP_SIZE = 0.1}
 if STEADY_STATE_SIM:
@@ -52,14 +52,14 @@ if STEADY_STATE_SIM:
     STEP_SIZE = 0.1
 
 # TODO_PER_SIM 4: define default config file (if None provided by brain)
-DEFAULT_CONFIG = {"mu": 1.5,}
+DEFAULT_CONFIG = {}
 
 class FMUSimulatorSession:
     # TODO_PER_SIM 5: Set-up model filepath (modeldir) & sim name (env_name) variables
     def __init__(
         self,
-        modeldir: str = "sim\\vanDerPol.fmu",
-        env_name: str = "VanDerPol_Oscillations",
+        modeldir: str = "sim\\Integrator.fmu",
+        env_name: str = "OpenModelicaIntegrator",
         log_file: Union[str, None] = None,
     ):
         """Template for simulating FMU models with FMUConnector
@@ -67,7 +67,7 @@ class FMUSimulatorSession:
         Parameters
         ----------
         modeldir: str, optional
-            relative filepath to your FMU sim (e.g: "sim\\vanDerPol.fmu", if in sim subfolder)
+            relative filepath to your FMU sim (e.g: "sim\\Integrator.fmu", if in sim subfolder)
         env_name: str, optional
             name of simulator environment, registered by SimulatorInterface
             note, this will be your sim name in preview.bons.ai
@@ -159,12 +159,7 @@ class FMUSimulatorSession:
         
         # TODO_PER_SIM 7: Add any action transformation required (from Bonsai to sim)
         # Apply actions
-        # Transform state to apply differential
-        # --> 'x0' += 'x0_adjust'
-        x0_adjust = action['x0_adjust']
-        sim_action_val = self.simulator.get_states(['x0'])['x0']
-        sim_action = {'x0': sim_action_val + x0_adjust}
-        self.simulator.apply_actions(sim_action)
+        self.simulator.apply_actions(action)
 
         # Run sim one step forward
         # - Stepping is performed only on sims that evolve over time (STEADY_STATE_SIM == False)
@@ -257,7 +252,7 @@ def test_random_policy(
         number of iterations to run, by default 10
     """
 
-    sim = FMUSimulatorSession(log_file="VanDerPol_Oscillations.csv") 
+    sim = FMUSimulatorSession(log_file="OpenModelicaIntegrator.csv") 
     for episode in range(num_episodes):
         iteration = 0
         terminal = False

@@ -11,7 +11,7 @@ def random_policy(state: Dict = None):
     """
     Ignore the state, move randomly.
     """
-    action = { "x0": random.randint(0, 1) - 0.5 }
+    action = { "u": random.randint(0, 10) - 5 }
     return action
 
 

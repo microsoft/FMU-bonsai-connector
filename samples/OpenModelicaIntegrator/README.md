@@ -1,37 +1,22 @@
-# FMU Example: Van der Pol
+# FMU Example: OpenModelica Integrator
 
-This simulator simulates a Van der Pol frequency response. It is not a steady-state simulator.
-The brain will learn to adjust an input parameter to control the oscillator.
-
-The simulator is implemented by [vanDerPol.fmu](https://github.com/modelica/fmi-cross-check/blob/master/fmus/2.0/cs/win64/FMUSDK/2.0.4/vanDerPol/vanDerPol.fmu) from the FMI Cross-Check repository.
+This simulator uses the model Integrator.fmu. The source of the model is [IntegratorModel.mo](sim/IntegratorModel.mo), which was created with [OpenModelica](https://openmodelica.org/) and exported via FMI Co-Simuloation 2.0. This model adds the value of the action u (per second) to the state x.
 
 ## States
 
 | State         | Range            | Notes    |
 | ------------- | ---------------- | -------- |
-| x0            | [-Inf ... Inf]   | Main direction of oscillation of a Van der Pol system. |
-| x1            | [-Inf ... Inf]   | Second direction of oscillation of a Van der Pol system. |
-| derx0         | [-Inf ... Inf]   | Speed on first direction. |
-| derx1         | [-Inf ... Inf]   | Speed on second direction. |
-
-Note, the main behavior of a Van der Pol system is that x1, will oscillate with same magnitude than the speed in x0 (derx0).
+| x             | [-Inf ... Inf]   | A numerical value. |
 
 ## Actions
 
 | State               | Range                | Notes    |
 | ------------------- | -------------------- | -------- |
-| x0_adjust           | [-0.2 ... 0.2]       | Adjustment on first direction of Van der Pol system. |
-
-In this Bonsai theoretical approach to the Van der Pol problem, it is assumed that we can perform small perturbations in only one of the directions (in x0).
-The goal of the brain will be minimizing the oscillation as much as possible, adjusting to variable configuration parameters (see section bellow).
+| u                   | [-Inf ... Inf]       | Change in x per second. |
 
 ## Configuration Parameters
 
-| State               | Range                | Notes    |
-| ------------------- | -------------------- | -------- |
-| mu                  | [0.5 ... 4]          | Oscillation parameter. |
-
-This parameter will change the response of x1 to x0. Changing this parameter during training should further ensure we generalize to different scenarios (avoiding overfitting).
+none
 
 ## Setting up: Installation & Bonsai configuration
 
@@ -54,8 +39,8 @@ Open an Anaconda Prompt window.
 
 3. Create a new brain and push INK file:
 
-        bonsai brain create -n vanDerPol_v0
-        bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
+        bonsai brain create -n OpenModelicaIntegrator_v0
+        bonsai brain version update-inkling -f machine_teacher.ink -n OpenModelicaIntegrator_v0
 
 4. Start simulator using:
 
@@ -74,11 +59,11 @@ Open an Anaconda Prompt window.
 
 6. Start brain training from CLI
 
-        bonsai brain version start-training -n vanDerPol_v0
+        bonsai brain version start-training -n OpenModelicaIntegrator_v0
 
 7. Connect simulators to unmanaged local sim:
 
-        bonsai simulator unmanaged connect -b vanDerPol_v0 -a Train -c ReduceOscillation --simulator-name VanDerPol_Oscillations
+        bonsai simulator unmanaged connect -b OpenModelicaIntegrator_v0 -a Train -c ReachTarget --simulator-name OpenModelicaIntegrator
 
 If the simulation is running successfully, command line output should print "Registered simulator".
 The Bonsai workspace should show the FMU simulator name under the Simulators section, listed as Unmanaged.
@@ -92,22 +77,22 @@ Open [main.py](main.py) and set FIRST_TIME_RUNNING to False (remember to set thi
 
 - This step ensures the image is not waiting for user input to start the simulation. Config file approved by user is used.
 once variable is set to False. In our case the sim configuration should be located at:
-[sim/vanDerPol.yaml](sim/vanDerPol_conf.yaml)
+[sim/OpenModelicaIntegrator_conf.yaml](sim/Integrator_conf.yaml)
 
 Then, on an Anaconda Prompt window
 
-1. Go to the "samples\vanDerPol" folder
+1. Go to the "samples\OpenModelicaIntegrator" folder
 
 2. Create a new brain and push INK file:
 
-        bonsai brain create -n vanDerPol_v0
-        bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
+        bonsai brain create -n OpenModelicaIntegrator_v0
+        bonsai brain version update-inkling -f machine_teacher.ink -n OpenModelicaIntegrator_v0
 
 3. Go back to FMU-bonsai-connector root
 4. Log in into Azure and push image
 
        az login
-       az acr build --image fmu_image_vanderpol:1 --platform windows --file Dockerfile-windows_vanDerPol --registry <ACR_REGISTRY_NAME> .
+       az acr build --image fmu_image_open_modelica_integrator:1 --platform windows --file Dockerfile-windows_OpenModelicaIntegrator --registry <ACR_REGISTRY_NAME> .
 
     *Note, ACR Registry can be extracted from preview.bons.ai --> Workspace ACR path == <ACR_REGISTRY_NAME>.azurecr.io
 
@@ -122,13 +107,15 @@ Then, on an Anaconda Prompt window
 5. Go to preview.bons.ai
 6. Click over "Add Sim" > "Other", and insert the location of the image:
 
-    - Azure Container Registry image path:  <ACR_REGISTRY_NAME>.azurecr.io/fmu_image_vanDerPol:1
+    - Azure Container Registry image path:  <ACR_REGISTRY_NAME>.azurecr.io/fmu_image_OpenModelicaIntegrator:1
 
-    - Simulator package display name:  fmu_image_vanderpol_v1
+    - Simulator package display name:  fmu_image_OpenModelicaIntegrator_v1
+
+    - OS: Windows
 
 7. Add package name to INK file:
 
-    - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {_"fmu_image_vanderpol_v1"_}"
+    - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {_"fmu_image_OpenModelicaIntegrator_v1"_}"
 
 ** Check [adding a training simulator to your Bonsai workspace](https://docs.microsoft.com/en-us/bonsai/guides/add-simulator?tabs=add-cli%2Ctrain-inkling&pivots=sim-platform-other)
 for further information about how to upload the container, add it to Bonsai, and scale the simulator.

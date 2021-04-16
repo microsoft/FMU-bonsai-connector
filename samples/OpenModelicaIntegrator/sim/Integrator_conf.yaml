@@ -1,0 +1,9 @@
+simulation:
+  config_params: []
+  inputs:
+  - u
+  outputs:
+  - x
+  other_vars:
+  - _D_outputAlias_x
+  - der_D_outputAlias_x
