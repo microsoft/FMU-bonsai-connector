@@ -1,0 +1,16 @@
+# Minimal pipeline to support component governance of FMU-bonsai-connector repository.
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: echo build information
+  displayName: 'echo build information'
+
+- script: |
+    echo "This pipeline doesn't actually build anything."
+    echo "It is needed so that the component governance step will run a scan and register components for compliance with Microsoft open-source policy."
+  displayName: 'script to echo build information'
