@@ -5,7 +5,7 @@ dependencies:
 - pyyaml>=5.1
 - pip:
   - microsoft-bonsai-api==0.1.2
-  - bonsai-cli==1.0.7
+  - bonsai-cli>=1.0.7
   - python-dotenv==0.13.0
   - matplotlib==3.3.4
   - scipy==1.6.1
