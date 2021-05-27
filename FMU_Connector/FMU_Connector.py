@@ -412,9 +412,8 @@ class FMUConnector:
         self.model_name = aux_head_and_tail_tup[1].replace(".fmu", "")
 
         # placeholder to prevent accessing methods if initialization hasn't been called first
+        # also prevents calling self.fmu.terminate() if initialization hasn't occurred or termination has already been applied
         self._is_initialized = False
-        # placeholder to prevent calling self.fmu.terminate() if termination has already been applied
-        self._is_terminated = True
         
         # get FMI version
         read_fmi_version = self.model_description.fmiVersion
@@ -836,12 +835,13 @@ class FMUConnector:
         # Ensure model has been initialized at least once
         self._model_has_been_initialized("_terminate_model")
 
-        if self._is_terminated:
-            print("[_terminate_model] Model has already been terminated. Skipping termination.")
+        if not self._is_initialized:
+            print("[_terminate_model] Model hasn't been initialized or has already been terminated. Skipping termination.")
             return
         
         # Terminate instance
         self.fmu.terminate()
+        self._is_initialized = False
 
         return
 
