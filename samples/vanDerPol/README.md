@@ -5,6 +5,8 @@ The brain will learn to adjust an input parameter to control the oscillator.
 
 The simulator is implemented by [vanDerPol.fmu](https://github.com/modelica/fmi-cross-check/blob/master/fmus/2.0/cs/win64/FMUSDK/2.0.4/vanDerPol/vanDerPol.fmu) from the FMI Cross-Check repository.
 
+Note, this example will only run in a Windows environment, since it has Windows dependencies/executables inside the FMU model wrapper.
+
 ## States
 
 | State         | Range            | Notes    |
