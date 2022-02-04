@@ -599,8 +599,10 @@ class FMUConnector:
         self._terminate_model()
 
         # free fmu
-        self.fmu.freeInstance()
-        self._is_instantiated = False
+        if (self._is_instantiated is True):
+            self.fmu.freeInstance()
+            self._is_instantiated = False
+            
         # clean up
         # [TODO] enforce clean up even when exceptions are thrown, or after keyboard interruption
         shutil.rmtree(self.unzipdir, ignore_errors=True)
