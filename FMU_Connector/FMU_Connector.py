@@ -414,6 +414,7 @@ class FMUConnector:
         # placeholder to prevent accessing methods if initialization hasn't been called first
         # also prevents calling self.fmu.terminate() if initialization hasn't occurred or termination has already been applied
         self._is_initialized = False
+        self._is_instantiated = False
         
         # get FMI version
         read_fmi_version = self.model_description.fmiVersion
@@ -536,7 +537,10 @@ class FMUConnector:
         """
         self._is_initialized = True
 
-        self.fmu.instantiate()
+        if (self._is_instantiated is False):
+            self.fmu.instantiate()
+            self._is_instantiated = True
+
         self.fmu.reset()
         self.fmu.setupExperiment(startTime=self.start_time)
         if config_param_vals is not None:
@@ -595,7 +599,10 @@ class FMUConnector:
         self._terminate_model()
 
         # free fmu
-        self.fmu.freeInstance()
+        if (self._is_instantiated is True):
+            self.fmu.freeInstance()
+            self._is_instantiated = False
+            
         # clean up
         # [TODO] enforce clean up even when exceptions are thrown, or after keyboard interruption
         shutil.rmtree(self.unzipdir, ignore_errors=True)
