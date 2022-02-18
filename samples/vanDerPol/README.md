@@ -63,12 +63,13 @@ Open an Anaconda Prompt window.
 
         python main.py
 
-    - Note, for new examples, you will have to verify the set of {inputs/outputs/config params} is correct.
-    - Check the CMD Prompt to follow instructions.
-    - The moment you answer 'y' at least once, the config will be validated.
-    - You can disable being prompted again by setting FIRST_TIME_RUNNING to False in main.py:
-
-    > FIRST_TIME_RUNNING = False
+> Note, for new examples, you may want to check the set of configuration_parameters, inputs, and outputs that are printed in console output to ensure that they match the variables you expect.
+> If the result is not what you expect, you should modify your simulation model FMU. Causality of your parameters should be set to:
+> * **parameter** for sim parameters (Bonsai SimConfig)
+> * **input** for sim inputs (Bonsai SimAction)
+> * **output** for sim outputs (Bonsai SimState)
+>
+> If you cannot modify the FMU itself, these variable types can be changed by editing the \*_conf.yml file that is generated when main.py is run.
 
 5. Open a new Anaconda Prompt and activate the environment too
 
@@ -87,16 +88,7 @@ The Bonsai workspace should show the FMU simulator name under the Simulators sec
 
 ## Running the model: Scaling your simulator
 
-Once you have confirmed input/outputs of the model through command prompt, you can go ahead and disable authentication.
-Open [main.py](main.py) and set FIRST_TIME_RUNNING to False (remember to set this to False, when transferring this examples to new models):
-
-> FIRST_TIME_RUNNING = False
-
-- This step ensures the image is not waiting for user input to start the simulation. Config file approved by user is used.
-once variable is set to False. In our case the sim configuration should be located at:
-[sim/vanDerPol.yaml](sim/vanDerPol_conf.yaml)
-
-Then, on an Anaconda Prompt window
+On an Anaconda Prompt window
 
 1. Go to the "samples\vanDerPol" folder
 
