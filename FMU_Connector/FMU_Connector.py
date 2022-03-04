@@ -435,6 +435,8 @@ class FMUConnector:
         error_log += "stop and start times, ({}) and ({}), respectively".format(self.stop_time, self.start_time)
         assert self.step_size < self.stop_time-self.start_time, error_log
 
+        print(f"[FMU Connector] Step size {self.step_size}, Start time {self.start_time}, Stop time {self.stop_time if self.stop_time < sys.float_info.max else 'NEVER'}'.")
+
         # set current time to start time
         self.sim_time = float(self.start_time)
         
@@ -579,6 +581,12 @@ class FMUConnector:
         
         # Reset time
         self.sim_time = float(self.start_time)
+
+        # The machine teacher can specify the time step size by setting the value of
+        # 'FMU_step_size' in a lesson's SimConfig.
+        if 'FMU_step_size' in config_param_vals:
+            self.step_size = config_param_vals['FMU_step_size']
+            print(f"[FMU Connector] Using step size {self.step_size} from FMU_step_size value in SimConfig")
 
         return
 
