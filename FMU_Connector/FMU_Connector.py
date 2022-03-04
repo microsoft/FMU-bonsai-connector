@@ -351,9 +351,6 @@ class FMUConnector:
         self,
         model_filepath: str,
         fmi_version: str = FMI_VERSION,
-        start_time = 0.0,
-        stop_time = sys.float_info.max, # Default stop time to max float. Run simulation episode as long as it is needed.
-        step_size = 1.0, # Default step size to one time unit.
         user_validation: bool = False,
         use_unzipped_model: bool = False,
     ):
@@ -369,12 +366,6 @@ class FMUConnector:
             FMI version (1.0, 2.0, 3.0).
                 fmi_version from model_description to use in case fmi_version cannot
                 be read from model.
-        start_time: float
-            Timestep to start the simulation from (in time units).
-        stop_time: float
-            Timestep to stop simulation (in time units).
-        step_size: float
-            Time to leave the simulation running in between steps (in time units).
         user_validation: bool
             If True, model inputs/outputs need to be accepted by user for each run.
             If False, YAML config file is used (if exists and valid). Otherwise, FMI
@@ -423,24 +414,28 @@ class FMUConnector:
             print(f"[FMU Connector] Using fmi version provided by user: v'{fmi_version}'. Model indicates v'{read_fmi_version}' instead.")
             self.fmi_version = fmi_version
 
-        # override time-related data if specified in defaultExperiment from the model description
+        # default time settings
+        self.start_time = 0.0 # Timestep to start the simulation from (in time units)
+        self.stop_time = sys.float_info.max # Timestep to stop simulation (in time units). Default is max float--don't stop.
+        self.step_size = 1.0 # Time to leave the simulation running in between steps (in time units).
+
+        # override time settings if specified in defaultExperiment tag of the model description
         if self.model_description.defaultExperiment:
             if self.model_description.defaultExperiment.startTime != None:
-                start_time = self.model_description.defaultExperiment.startTime
+                self.start_time = self.model_description.defaultExperiment.startTime
             if self.model_description.defaultExperiment.stopTime != None:
-                stop_time = self.model_description.defaultExperiment.stopTime
+                self.stop_time = self.model_description.defaultExperiment.stopTime
             if self.model_description.defaultExperiment.stepSize != None:
-                step_size = self.model_description.defaultExperiment.stepSize
+                self.step_size = self.model_description.defaultExperiment.stepSize
 
         # save time-related data
-        error_log = "Stop time provided ({}) is lower than start time provided ({})".format(stop_time, start_time)
-        assert stop_time > start_time, error_log
-        error_log  = "Step size time ({}) is greater than the difference between ".format(step_size)
-        error_log += "stop and start times, ({}) and ({}), respectively".format(stop_time, start_time)
-        assert step_size < stop_time-start_time, error_log
-        self.start_time = float(start_time)
-        self.stop_time = float(stop_time)
-        self.step_size = float(step_size)
+        error_log = "Stop time provided ({}) is lower than start time provided ({})".format(self.stop_time, self.start_time)
+        assert self.stop_time > self.start_time, error_log
+        error_log  = "Step size time ({}) is greater than the difference between ".format(self.step_size)
+        error_log += "stop and start times, ({}) and ({}), respectively".format(self.stop_time, self.start_time)
+        assert self.step_size < self.stop_time-self.start_time, error_log
+
+        # set current time to start time
         self.sim_time = float(self.start_time)
         
         # retrieve FMU model type, as well as model identifier
