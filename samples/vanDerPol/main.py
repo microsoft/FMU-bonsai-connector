@@ -34,19 +34,6 @@ log_path = "logs"
 # ("1.0", "2.0", "3.0")
 FMI_VERSION = "2.0"
 
-# TODO_PER_SIM 2: Set to True when dealing with a steady state simulator (no time evolution involved)
-STEADY_STATE_SIM = False
-
-# TODO_PER_SIM 3: define start, stop, and step size
-# - stop and step size values are overwritten for steady state sims
-START_TIME = 0.0
-STOP_TIME = 20.0
-STEP_SIZE = 0.1
-# if steady-state sim, default to {STOP_TIME = 1.0} & {STEP_SIZE = 0.1}
-if STEADY_STATE_SIM:
-    STOP_TIME = 1.0
-    STEP_SIZE = 0.1
-
 # TODO_PER_SIM 4: define default config file (if None provided by brain)
 DEFAULT_CONFIG = {"mu": 1.5,}
 
@@ -79,9 +66,6 @@ class FMUSimulatorSession:
         # Validate and instance FMU model
         self.simulator = FMUConnector(model_filepath = self.model_full_path,
                                       fmi_version = FMI_VERSION,
-                                      start_time = START_TIME,
-                                      stop_time = STOP_TIME,
-                                      step_size = STEP_SIZE,
                                       user_validation = False)
 
         # initialize model - required!
@@ -163,10 +147,7 @@ class FMUSimulatorSession:
         self.simulator.apply_actions(sim_action)
 
         # Run sim one step forward
-        # - Stepping is performed only on sims that evolve over time (STEADY_STATE_SIM == False)
-        if not STEADY_STATE_SIM:
-            self.simulator.run_step()
-
+        self.simulator.run_step()
 
     def halted(self) -> bool:
         """Should return True if the simulator cannot continue"""

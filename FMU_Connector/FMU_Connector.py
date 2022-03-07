@@ -17,10 +17,6 @@ SIM_CONFIG_NAME_f = lambda model_fp: model_fp.replace(".fmu", "_conf.yaml")
 # ("1.0", "2.0", "3.0")
 FMI_VERSION = "2.0"
 
-START_TIME = 0.0
-STOP_TIME = 20.0
-STEP_SIZE = 0.1
-
 
 class FMUSimValidation:
     def __init__(
@@ -355,9 +351,6 @@ class FMUConnector:
         self,
         model_filepath: str,
         fmi_version: str = FMI_VERSION,
-        start_time = START_TIME,
-        stop_time = STOP_TIME,
-        step_size = STEP_SIZE,
         user_validation: bool = False,
         use_unzipped_model: bool = False,
     ):
@@ -373,12 +366,6 @@ class FMUConnector:
             FMI version (1.0, 2.0, 3.0).
                 fmi_version from model_description to use in case fmi_version cannot
                 be read from model.
-        start_time: float
-            Timestep to start the simulation from (in time units).
-        stop_time: float
-            Timestep to stop simulation (in time units).
-        step_size: float
-            Time to leave the simulation running in between steps (in time units).
         user_validation: bool
             If True, model inputs/outputs need to be accepted by user for each run.
             If False, YAML config file is used (if exists and valid). Otherwise, FMI
@@ -428,15 +415,30 @@ class FMUConnector:
             print(f"[FMU Connector] Using fmi version provided by user: v'{fmi_version}'. Model indicates v'{read_fmi_version}' instead.")
             self.fmi_version = fmi_version
 
+        # default time settings
+        self.start_time = 0.0 # Timestep to start the simulation from (in time units)
+        self.stop_time = sys.float_info.max # Timestep to stop simulation (in time units). Default is max float--don't stop.
+        self.step_size = 1.0 # Time to leave the simulation running in between steps (in time units).
+
+        # override time settings if specified in defaultExperiment tag of the model description
+        if self.model_description.defaultExperiment:
+            if self.model_description.defaultExperiment.startTime != None:
+                self.start_time = self.model_description.defaultExperiment.startTime
+            if self.model_description.defaultExperiment.stopTime != None:
+                self.stop_time = self.model_description.defaultExperiment.stopTime
+            if self.model_description.defaultExperiment.stepSize != None:
+                self.step_size = self.model_description.defaultExperiment.stepSize
+
         # save time-related data
-        error_log = "Stop time provided ({}) is lower than start time provided ({})".format(stop_time, start_time)
-        assert stop_time > start_time, error_log
-        error_log  = "Step size time ({}) is greater than the difference between ".format(step_size)
-        error_log += "stop and start times, ({}) and ({}), respectively".format(stop_time, start_time)
-        assert step_size < stop_time-start_time, error_log
-        self.start_time = float(start_time)
-        self.stop_time = float(stop_time)
-        self.step_size = float(step_size)
+        error_log = "Stop time provided ({}) is lower than start time provided ({})".format(self.stop_time, self.start_time)
+        assert self.stop_time > self.start_time, error_log
+        error_log  = "Step size time ({}) is greater than the difference between ".format(self.step_size)
+        error_log += "stop and start times, ({}) and ({}), respectively".format(self.stop_time, self.start_time)
+        assert self.step_size < self.stop_time-self.start_time, error_log
+
+        print(f"[FMU Connector] Step size {self.step_size}, Start time {self.start_time}, Stop time {self.stop_time if self.stop_time < sys.float_info.max else 'NEVER'}'.")
+
+        # set current time to start time
         self.sim_time = float(self.start_time)
         
         # retrieve FMU model type, as well as model identifier
@@ -583,6 +585,12 @@ class FMUConnector:
         
         # Reset time
         self.sim_time = float(self.start_time)
+
+        # The machine teacher can specify the time step size by setting the value of
+        # 'FMU_step_size' in a lesson's SimConfig.
+        if 'FMU_step_size' in config_param_vals:
+            self.step_size = config_param_vals['FMU_step_size']
+            print(f"[FMU Connector] Using step size {self.step_size} from FMU_step_size value in SimConfig")
 
         return
 
