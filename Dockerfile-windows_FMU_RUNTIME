@@ -1,0 +1,13 @@
+FROM fmu_base
+
+COPY ./sim.zip /zip/sim.zip
+
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+RUN Expand-Archive -LiteralPath "/zip/sim.zip" -DestinationPath "/zip"
+
+RUN CP /zip/*.fmu /src/generic/generic.fmu
+
+# Run main task
+#CMD "python .\generic\main.py"
+
