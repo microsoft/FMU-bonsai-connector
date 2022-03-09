@@ -136,14 +136,18 @@ class FMUSimulatorSession:
         action : Dict[str, Any]
             BrainAction chosen from the Bonsai Service, prediction or exploration
         """
-        
-        # TODO_PER_SIM 7: Add any action transformation required (from Bonsai to sim)
-        # Apply actions
-        # Transform state to apply differential
-        # --> 'x0' += 'x0_adjust'
-        x0_adjust = action['x0_adjust']
-        sim_action_val = self.simulator.get_states(['x0'])['x0']
-        sim_action = {'x0': sim_action_val + x0_adjust}
+
+        sim_action = action
+
+        # We don't currently support a general-purpose custom logic mechanism for action transformations.
+        # Custom logic for the van der Pol oscillator sample to perform an action transformation
+        # --> x0 += x0_adjust
+        if self.simulator.model_description.guid == '{8c4e810f-3da3-4a00-8276-176fa3c9f000}':
+            if 'x0_adjust' in action:
+                x0_adjust = action['x0_adjust']
+                sim_action_val = self.simulator.get_states(['x0'])['x0']
+                sim_action = {'x0': sim_action_val + x0_adjust}
+
         self.simulator.apply_actions(sim_action)
 
         # Run sim one step forward
