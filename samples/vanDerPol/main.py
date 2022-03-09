@@ -34,9 +34,6 @@ log_path = "logs"
 # ("1.0", "2.0", "3.0")
 FMI_VERSION = "2.0"
 
-# TODO_PER_SIM 4: define default config file (if None provided by brain)
-DEFAULT_CONFIG = {"mu": 1.5,}
-
 class FMUSimulatorSession:
     # TODO_PER_SIM 5: Set-up model filepath (modeldir) & sim name (env_name) variables
     def __init__(
@@ -61,8 +58,6 @@ class FMUSimulatorSession:
         self.env_name = env_name
         print("Using simulator file from: ", self.model_full_path)
 
-        self.default_config = DEFAULT_CONFIG
-
         # Validate and instance FMU model
         self.simulator = FMUConnector(model_filepath = self.model_full_path,
                                       fmi_version = FMI_VERSION,
@@ -71,7 +66,7 @@ class FMUSimulatorSession:
         # initialize model - required!
         self.simulator.initialize_model()
 
-        self._reset()
+        self._reset({})
         self.terminal = False
         if not log_file:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -95,7 +90,7 @@ class FMUSimulatorSession:
         return self.simulator.get_all_vars()
 
 
-    def _reset(self, config: dict = None):
+    def _reset(self, config: dict):
         """Helper function for resetting a simulator environment
            Runs with config provided by Bonsai (if given), uses default config otherwise
 
@@ -105,18 +100,11 @@ class FMUSimulatorSession:
             [description], by default None
         """
 
-        if config:
-            if len(config.items()) > 0:
-                self.sim_config = config
-            else:
-                self.sim_config = self.default_config
-        else:
-            self.sim_config = self.default_config
-
+        self.sim_config = config
         self.simulator.reset(self.sim_config)
 
 
-    def episode_start(self, config: Dict[str, Any] = None):
+    def episode_start(self, config: Dict[str, Any]):
         """Method invoked at the start of each episode to reset the sim with a given episode configuration.
 
         Parameters
@@ -139,6 +127,7 @@ class FMUSimulatorSession:
 
         sim_action = action
 
+        # TODO_PER_SIM 7: Add any action transformation required (from Bonsai to sim)
         # We don't currently support a general-purpose custom logic mechanism for action transformations.
         # Custom logic for the van der Pol oscillator sample to perform an action transformation
         # --> x0 += x0_adjust
@@ -180,7 +169,7 @@ class FMUSimulatorSession:
 
         state = add_prefixes(state, "state")
         action = add_prefixes(action, "action")
-        config = add_prefixes(self.default_config, "config")
+        config = add_prefixes(self.sim_config, "config")
         data = {**state, **action, **config}
         data["episode"] = episode
         data["iteration"] = iteration
@@ -238,11 +227,14 @@ def test_random_policy(
         number of iterations to run, by default 10
     """
 
+    # TODO_PER_SIM 4: define default config file for test_random_policy
+    DEFAULT_CONFIG = {"mu": 1.5,}
+
     sim = FMUSimulatorSession(log_file="VanDerPol_Oscillations.csv") 
     for episode in range(num_episodes):
         iteration = 0
         terminal = False
-        obs = sim.episode_start()
+        obs = sim.episode_start(DEFAULT_CONFIG)
         while not terminal:
             action = sim.random_policy()
             sim.episode_step(action)
@@ -307,6 +299,7 @@ def main(config_setup: bool = False):
             )
             sequence_id = event.sequence_id
             print(f'[{time.strftime("%H:%M:%S")}] Last Event: {event.type}, Sim Time: {sim.simulator.sim_time:.3f}')
+            print(f'{sim_state.state}')
 
             # Event loop
             if event.type == "Idle":
