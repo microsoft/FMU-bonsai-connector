@@ -71,7 +71,7 @@ WORKDIR /src
 # Transferring folders up
 COPY ./FMU_Connector/FMU_Connector.py /src/FMU_Connector/FMU_Connector.py
 
-COPY ./samples/generic /src/generic
+COPY ./generic /src/generic
 
 # Install requirements
 RUN pip3 install -r /src/generic/requirements.txt
