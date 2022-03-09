@@ -200,10 +200,10 @@ def env_setup():
     if not env_file_exists:
         open(".env", "a").close()
 
-    if not all([env_file_exists, workspace]):
+    if not env_file_exists and not workspace:
         workspace = input("Please enter your workspace id: ")
         set_key(".env", "SIM_WORKSPACE", workspace)
-    if not all([env_file_exists, access_key]):
+    if not env_file_exists and not access_key:
         access_key = input("Please enter your access key: ")
         set_key(".env", "SIM_ACCESS_KEY", access_key)
 
