@@ -8,6 +8,7 @@ import os
 import sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, dir_path + "//..//..//FMU_Connector")
+sys.path.insert(0, dir_path + "//..//FMU_Connector")
 
 import pathlib
 import time
@@ -38,8 +39,8 @@ class FMUSimulatorSession:
     # TODO_PER_SIM 5: Set-up model filepath (modeldir) & sim name (env_name) variables
     def __init__(
         self,
-        modeldir: str = "sim\\vanDerPol.fmu",
-        env_name: str = "VanDerPol_Oscillations",
+        modeldir: str = "generic.fmu",
+        env_name: str = "Generic FMU Simulation",
         log_file: Union[str, None] = None,
     ):
         """Template for simulating FMU models with FMUConnector
