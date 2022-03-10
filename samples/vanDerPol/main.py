@@ -299,7 +299,6 @@ def main(config_setup: bool = False):
             )
             sequence_id = event.sequence_id
             print(f'[{time.strftime("%H:%M:%S")}] Last Event: {event.type}, Sim Time: {sim.simulator.sim_time:.3f}')
-            print(f'{sim_state.state}')
 
             # Event loop
             if event.type == "Idle":
