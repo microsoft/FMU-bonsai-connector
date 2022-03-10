@@ -9,5 +9,4 @@ RUN Expand-Archive -LiteralPath "/zip/sim.zip" -DestinationPath "/zip"
 RUN CP /zip/*.fmu /src/generic/generic.fmu
 
 # Run main task
-#CMD "python .\generic\main.py"
-
+CMD "python .\generic\main.py"
