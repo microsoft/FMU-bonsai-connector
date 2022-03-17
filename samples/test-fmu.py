@@ -12,8 +12,13 @@ import os
 import shutil
 import pathlib
 import subprocess
+from zipfile import ZipFile
 
 log_command_output: bool = False
+
+def print_highlighted(message: str):
+    # Send special escape sequences that print text in the color blue on most terminals.
+    print(f"\033[94m{message}\033[0m")
 
 def run_command(command: str, return_json: bool=False, errors_expected: bool=False):
     print(f"  > {command}")
@@ -26,7 +31,9 @@ stdout: {process.stdout}
 """.strip())
     if process.returncode != 0:
         if not errors_expected:
-            print(process.stderr)
+            if process.stderr != None:
+                print(process.stderr)
+            sys.exit()
         return None
     if not return_json:
         return None
@@ -41,10 +48,6 @@ def delete_if_exists(path: str, is_directory: bool = False):
             os.remove(path)
         print(f"  deleted {path}")
 
-def copy_file(source, destination):
-    shutil.copyfile(source, destination)
-    print(f"  copied {source} -> {destination}")
-
 def main(mode: str, fmu_path: str):
     if not os.path.exists(fmu_path):
         print(f"test-fmu.py: error: File {fmu_path} not found.")
@@ -53,20 +56,39 @@ def main(mode: str, fmu_path: str):
     if not "SIM_ACCESS_KEY" in os.environ:
         print("test-fmu.py: error: SIM_ACCESS_KEY environment variable must be set to your Bonsai workspace access key.")
 
-    fmu_connector_root_directory = pathlib.Path(__file__).resolve().parent.parent
+    # Determine the FMU connector root directory by its relative path from this script file.
+    root_dir = pathlib.Path(__file__).resolve().parent.parent
 
-    print("* Cleaning up previous temporary sample files")
-    delete_if_exists(f"{fmu_connector_root_directory}\\generic\\generic.fmu")
-    delete_if_exists(f"{fmu_connector_root_directory}\\generic\\generic_conf.yaml")
-    delete_if_exists(f"{fmu_connector_root_directory}\\generic\\generic_unzipped", is_directory = True)
+    print_highlighted("Cleaning up previous temporary sample files")
+    delete_if_exists(f"{root_dir}\\sim.zip")
+    delete_if_exists(f"{root_dir}\\generic\\generic.fmu")
+    delete_if_exists(f"{root_dir}\\generic\\generic_conf.yaml")
+    delete_if_exists(f"{root_dir}\\generic\\generic_unzipped", is_directory = True)
     print()
 
-    print("* Copying new sample files")
-    copy_file(fmu_path, f"{fmu_connector_root_directory}\\generic\\generic.fmu")
-    print()
+    if mode == "local":
+        print_highlighted("Copying new sample files")
+        generic_fmu_path = f"{root_dir}\\generic\\generic.fmu"
+        shutil.copyfile(fmu_path, generic_fmu_path)
+        print(f"  copied {fmu_path} -> {generic_fmu_path}")
+        print()
+        print_highlighted("Launching local simulator")
+        run_command(f"cmd /c start python {root_dir}\\generic\\main.py")
+    elif mode == "local-container":
+        print_highlighted("Building base image")
+        run_command(f"docker build -t fmu_base:latest -f {root_dir}\\Dockerfile-windows_FMU_BASE {root_dir}")
+        print()
+        print(f"* Zipping {fmu_path}")
+        zip_path = f"{root_dir}\Sim.zip"
+        with ZipFile(zip_path, 'w') as zipfile:
+            zipfile.write(fmu_path, arcname=pathlib.Path(fmu_path).name)
+        print(f"  zipped {fmu_path} -> {zip_path}")
+        print()
+        print_highlighted("Building runtime image")
+        run_command(f"docker build -t fmu_runtime:latest -f {root_dir}\\Dockerfile-windows_FMU_RUNTIME {root_dir}")
+        print_highlighted("Launching local container")
+        run_command(f"cmd /c start docker run -it --rm -e SIM_ACCESS_KEY=%SIM_ACCESS_KEY% -e SIM_WORKSPACE=%SIM_WORKSPACE% fmu_runtime:latest")
 
-    print("* Launching local simulator")
-    run_command(f"cmd /c start python {fmu_connector_root_directory}\\generic\\main.py")
 
 if __name__ == "__main__":
 
