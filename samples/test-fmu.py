@@ -12,6 +12,8 @@ import os
 import shutil
 import pathlib
 import subprocess
+import sys
+import json
 from zipfile import ZipFile
 
 log_command_output: bool = False
@@ -22,7 +24,7 @@ def print_highlighted(message: str):
 
 def run_command(command: str, return_json: bool=False, errors_expected: bool=False):
     print(f"  > {command}")
-    process = subprocess.run(command, capture_output=return_json, text=True)
+    process = subprocess.run(command, capture_output=return_json, text=True, shell=True)
     if log_command_output:
         print(f"""
 returncode: {process.returncode}
@@ -55,6 +57,8 @@ def main(mode: str, fmu_path: str):
         print("test-fmu.py: error: SIM_WORKSPACE environment variable must be set to your Bonsai workspace ID.")
     if not "SIM_ACCESS_KEY" in os.environ:
         print("test-fmu.py: error: SIM_ACCESS_KEY environment variable must be set to your Bonsai workspace access key.")
+    if mode=="managed" and not "SIM_ACR_PATH" in os.environ:
+        print("test-fmu.py: error: SIM_ACR_PATH environment variable must be set to the full path of the Azure Contrainer Registry associated with your Bonsai workspace.")
 
     # Determine the FMU connector root directory by its relative path from this script file.
     root_dir = pathlib.Path(__file__).resolve().parent.parent
@@ -67,27 +71,56 @@ def main(mode: str, fmu_path: str):
     print()
 
     if mode == "local":
+
         print_highlighted("Copying new sample files")
         generic_fmu_path = f"{root_dir}\\generic\\generic.fmu"
         shutil.copyfile(fmu_path, generic_fmu_path)
         print(f"  copied {fmu_path} -> {generic_fmu_path}")
         print()
+
         print_highlighted("Launching local simulator")
-        run_command(f"cmd /c start python {root_dir}\\generic\\main.py")
-    elif mode == "local-container":
+        run_command(f"start python {root_dir}\\generic\\main.py")
+
+    else: # local-container or managed
+
         print_highlighted("Building base image")
         run_command(f"docker build -t fmu_base:latest -f {root_dir}\\Dockerfile-windows_FMU_BASE {root_dir}")
         print()
+
         print(f"* Zipping {fmu_path}")
         zip_path = f"{root_dir}\Sim.zip"
         with ZipFile(zip_path, 'w') as zipfile:
             zipfile.write(fmu_path, arcname=pathlib.Path(fmu_path).name)
         print(f"  zipped {fmu_path} -> {zip_path}")
         print()
+
         print_highlighted("Building runtime image")
         run_command(f"docker build -t fmu_runtime:latest -f {root_dir}\\Dockerfile-windows_FMU_RUNTIME {root_dir}")
-        print_highlighted("Launching local container")
-        run_command(f"cmd /c start docker run -it --rm -e SIM_ACCESS_KEY=%SIM_ACCESS_KEY% -e SIM_WORKSPACE=%SIM_WORKSPACE% fmu_runtime:latest")
+        print()
+
+        if mode == "local-container":
+
+            print_highlighted("Launching local container")
+            run_command(f"start docker run -it --rm -e SIM_ACCESS_KEY=%SIM_ACCESS_KEY% -e SIM_WORKSPACE=%SIM_WORKSPACE% fmu_runtime:latest")
+
+        elif mode == "managed":
+
+            print_highlighted("Pushing to ACR")
+            sim_acr_path = os.environ.get("SIM_ACR_PATH")
+            sim_acr_path_name_only = sim_acr_path.split(".")[0]
+            run_command(f"az acr login --name {sim_acr_path_name_only}")
+            run_command(f"docker tag fmu_runtime:latest {sim_acr_path}/fmu_runtime:latest")
+            run_command(f"docker push {sim_acr_path}/fmu_runtime:latest")
+            print()
+
+            print_highlighted("Checking if existing simulator needs to be removed from Bonsai workspace")
+            package_show_cmd = run_command("bonsai simulator package show --name fmu_runtime --output json", return_json=True, errors_expected=True)
+            if package_show_cmd != None:
+                run_command("bonsai simulator package remove --name fmu_runtime --yes")
+            print()
+
+            print_highlighted("Creating simulator in Bonsai workspace")
+            run_command("bonsai simulator package container create --name fmu_runtime --image-uri {sim_acr_path}/fmu_runtime:latest --max-instance-count 25 --cores-per-instance 1 --memory-in-gb-per-instance 1 --os-type Windows")
 
 
 if __name__ == "__main__":
