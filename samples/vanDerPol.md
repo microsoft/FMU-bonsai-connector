@@ -1,9 +1,13 @@
 # FMU Example: Van der Pol
 
-This simulator simulates a Van der Pol frequency response. It is not a steady-state simulator.
+This simulator simulates a Van der Pol frequency response.
 The brain will learn to adjust an input parameter to control the oscillator.
 
 The simulator is implemented by [vanDerPol.fmu](https://github.com/modelica/fmi-cross-check/blob/master/fmus/2.0/cs/win64/FMUSDK/2.0.4/vanDerPol/vanDerPol.fmu) from the FMI Cross-Check repository.
+That vanDerPol.fmu model has been modified as follows:
+* Added a DefaultExperiment with stepSize="0.1".
+* Changed the causality of variable x0 to input so that x0 can be controlled by Bonsai actions.
+* Changed the causality of variables x1, der(x0), and der(x1) to output so that they can be used as Bonsai states.
 
 Note, this example will only run in a Windows environment, since it has Windows dependencies/executables inside the FMU model wrapper.
 
@@ -27,6 +31,8 @@ Note, the main behavior of a Van der Pol system is that x1, will oscillate with 
 In this Bonsai theoretical approach to the Van der Pol problem, it is assumed that we can perform small perturbations in only one of the directions (in x0).
 The goal of the brain will be minimizing the oscillation as much as possible, adjusting to variable configuration parameters (see section bellow).
 
+> NOTE: This FMU connector contains special logic in FMUSimulatorSession.episode_step that adds the value of x0_adjust to the previous value of x0.
+
 ## Configuration Parameters
 
 | State               | Range                | Notes    |
@@ -42,7 +48,7 @@ Go to this project's [README.md](../../README.md) to review:
 - INSTALLATIONS REQUIRED (conda & setting environment up)
 - SETTING UP BONSAI CONFIGURATION
 
-***Note, this example only runs in win64***
+> NOTE: This example only runs in win64.
 
 ## Running the model: Local simulator
 
@@ -51,81 +57,43 @@ Open an Anaconda Prompt window.
 1. Activate Anaconda environment:
 
         conda activate fmu_env
+        cd samples
 
-2. Point to the "samples" folder and get inside any of the proposed examples
+2. Start simulator using:
 
-3. Create a new brain and push INK file:
+        ./test-fmu.bat --mode local vanDerPol.fmu
 
-        bonsai brain create -n vanDerPol_v0
-        bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
+3. Create brain and start training from the Bonsai CLI
 
-4. Start simulator using:
-
-        python main.py
-
-> Note, for new examples, you may want to check the set of configuration_parameters, inputs, and outputs that are printed in console output to ensure that they match the variables you expect.
-> If the result is not what you expect, you should modify your simulation model FMU. Causality of your parameters should be set to:
-> * **parameter** for sim parameters (Bonsai SimConfig)
-> * **input** for sim inputs (Bonsai SimAction)
-> * **output** for sim outputs (Bonsai SimState)
->
-> If you cannot modify the FMU itself, these variable types can be changed by editing the \*_conf.yml file that is generated when main.py is run.
-
-5. Open a new Anaconda Prompt and activate the environment too
-
-        conda activate fmu_env
-
-6. Start brain training from CLI
-
-        bonsai brain version start-training -n vanDerPol_v0
-
-7. Connect simulators to unmanaged local sim:
-
-        bonsai simulator unmanaged connect -b vanDerPol_v0 -a Train -c ReduceOscillation --simulator-name VanDerPol_Oscillations
+        bonsai brain create -n vanDerPol
+        bonsai brain version update-inkling -f vanDerPol.ink -n vanDerPol
+        bonsai brain version start-training -n vanDerPol
+        bonsai simulator unmanaged connect -b vanDerPol -a Train -c ReduceOscillation --simulator-name "van der Pol oscillator FMU"
 
 If the simulation is running successfully, command line output should print "Registered simulator".
 The Bonsai workspace should show the FMU simulator name under the Simulators section, listed as Unmanaged.
 
+## Running the model: Local simulator running in a Docker container
+
+The steps for this are the same as for the previous scenario (Local simulator) except in step 2 start the simulator using:
+
+        ./test-fmu.bat --mode local-container vanDerPol.fmu
+
 ## Running the model: Scaling your simulator
 
-On an Anaconda Prompt window
+Open an Anaconda Prompt window.
 
-1. Go to the "samples\vanDerPol" folder
+1. Activate Anaconda environment:
 
-2. Create a new brain and push INK file:
+        conda activate fmu_env
+        cd samples
 
-        bonsai brain create -n vanDerPol_v0
-        bonsai brain version update-inkling -f machine_teacher.ink -n vanDerPol_v0
+2. Build the simulator container and add it to your Bonsai workspace using:
 
-3. Go back to FMU-bonsai-connector root
-4. Log in into Azure and push image
+        ./test-fmu.bat --mode managed vanDerPol.fmu
 
-       az login
-       az acr build --image fmu_image_vanderpol:1 --platform windows --file Dockerfile-windows_vanDerPol --registry <ACR_REGISTRY_NAME> .
+3. Create brain and start training from the Bonsai CLI
 
-    *Note, ACR Registry can be extracted from preview.bons.ai --> Workspace ACR path == <ACR_REGISTRY_NAME>.azurecr.io
-
-    *Also, feel free to rerun before troubleshooting if you find the following error:
-        
-    > "container XXX encountered an error during hcsshim::System::Start: context deadline exceeded
-    >
-    > 2021/03/20 02:10:06 Container failed during run: build. No retries remaining.
-    >
-    > failed to run step ID: build: exit status 1
-
-5. Go to preview.bons.ai
-6. Click over "Add Sim" > "Other", and insert the location of the image:
-
-    - Azure Container Registry image path:  <ACR_REGISTRY_NAME>.azurecr.io/fmu_image_vanDerPol:1
-
-    - Simulator package display name:  fmu_image_vanderpol_v1
-
-    - OS: Windows
-
-7. Add package name to INK file:
-
-    - Modify "source simulator Simulator([...]) \{ }" into "source simulator Simulator([...]) {_"fmu_image_vanderpol_v1"_}"
-
-** Check [adding a training simulator to your Bonsai workspace](https://docs.microsoft.com/en-us/bonsai/guides/add-simulator?tabs=add-cli%2Ctrain-inkling&pivots=sim-platform-other)
-for further information about how to upload the container, add it to Bonsai, and scale the simulator.
-
+        bonsai brain create -n vanDerPol
+        bonsai brain version update-inkling -f vanDerPol.ink -n vanDerPol
+        bonsai brain version start-training -n vanDerPol --simulator-package-name vanDerPol_fmu
