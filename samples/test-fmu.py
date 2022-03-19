@@ -114,13 +114,14 @@ def main(mode: str, fmu_path: str):
             print()
 
             print_highlighted("Checking if existing simulator needs to be removed from Bonsai workspace")
-            package_show_cmd = run_command("bonsai simulator package show --name fmu_runtime --output json", return_json=True, errors_expected=True)
+            package_name = f"{pathlib.Path(fmu_path).stem}_fmu"
+            package_show_cmd = run_command(f"bonsai simulator package show --name {package_name} --output json", return_json=True, errors_expected=True)
             if package_show_cmd != None:
-                run_command("bonsai simulator package remove --name fmu_runtime --yes")
+                run_command(f"bonsai simulator package remove --name {package_name} --yes")
             print()
 
             print_highlighted("Creating simulator in Bonsai workspace")
-            run_command("bonsai simulator package container create --name fmu_runtime --image-uri {sim_acr_path}/fmu_runtime:latest --max-instance-count 25 --cores-per-instance 1 --memory-in-gb-per-instance 1 --os-type Windows")
+            run_command(f"bonsai simulator package container create --name {package_name} --image-uri {sim_acr_path}/fmu_runtime:latest --max-instance-count 25 --cores-per-instance 1 --memory-in-gb-per-instance 1 --os-type Windows")
 
 
 if __name__ == "__main__":
