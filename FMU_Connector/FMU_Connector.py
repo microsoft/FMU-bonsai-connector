@@ -434,7 +434,7 @@ class FMUConnector:
         assert self.stop_time > self.start_time, error_log
         error_log  = "Step size time ({}) is greater than the difference between ".format(self.step_size)
         error_log += "stop and start times, ({}) and ({}), respectively".format(self.stop_time, self.start_time)
-        assert self.step_size < self.stop_time-self.start_time, error_log
+        assert self.step_size <= self.stop_time-self.start_time, error_log
 
         print(f"[FMU Connector] Step size {self.step_size}, Start time {self.start_time}, Stop time {self.stop_time if self.stop_time < sys.float_info.max else 'NEVER'}'.")
 

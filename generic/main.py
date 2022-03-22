@@ -40,7 +40,6 @@ class FMUSimulatorSession:
     def __init__(
         self,
         modeldir: str = "generic.fmu",
-        env_name: str = "Generic FMU Simulation",
         log_file: Union[str, None] = None,
     ):
         """Template for simulating FMU models with FMUConnector
@@ -56,13 +55,13 @@ class FMUSimulatorSession:
 
         self.modeldir = modeldir
         self.model_full_path = os.path.join(dir_path, self.modeldir)
-        self.env_name = env_name
         print("Using simulator file from: ", self.model_full_path)
 
         # Validate and instance FMU model
         self.simulator = FMUConnector(model_filepath = self.model_full_path,
                                       fmi_version = FMI_VERSION,
                                       user_validation = False)
+        self.env_name = f"{self.simulator.model_description.modelName} FMU"
 
         # initialize model - required!
         self.simulator.initialize_model()
@@ -71,7 +70,7 @@ class FMUSimulatorSession:
         self.terminal = False
         if not log_file:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-            log_file = current_time + "_" + env_name + "_log.csv"
+            log_file = current_time + "_" + self.env_name + "_log.csv"
             log_file = os.path.join(log_path, log_file)
             logs_directory = pathlib.Path(log_file).parent.absolute()
             if not pathlib.Path(logs_directory).exists():
