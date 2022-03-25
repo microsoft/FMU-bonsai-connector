@@ -64,10 +64,10 @@ def main(mode: str, fmu_path: str):
     root_dir = pathlib.Path(__file__).resolve().parent.parent
 
     print_highlighted("Cleaning up previous temporary sample files")
-    # delete_if_exists(f"{root_dir}\\sim.zip")
-    # delete_if_exists(f"{root_dir}\\generic\\generic.fmu")
-    # delete_if_exists(f"{root_dir}\\generic\\generic_conf.yaml")
-    # delete_if_exists(f"{root_dir}\\generic\\generic_unzipped", is_directory = True)
+    delete_if_exists(f"{root_dir}\\sim.zip")
+    delete_if_exists(f"{root_dir}\\generic\\generic.fmu")
+    delete_if_exists(f"{root_dir}\\generic\\generic_conf.yaml")
+    delete_if_exists(f"{root_dir}\\generic\\generic_unzipped", is_directory = True)
     print()
 
     if mode == "local":
