@@ -11,6 +11,7 @@ sys.path.insert(0, dir_path + "//..//..//FMU_Connector")
 sys.path.insert(0, dir_path + "//..//FMU_Connector")
 
 import pathlib
+import json
 import time
 import datetime
 from distutils.util import strtobool
@@ -271,14 +272,15 @@ def main(config_setup: bool = False):
     client = BonsaiClient(config_client)
 
     # # Load json file as simulator integration config type file
-    # with open("interface.json") as file:
-    #     interface = json.load(file)
+    with open("interface.json") as file:
+        interface = json.load(file)
 
     # Create simulator session and init sequence id
     registration_info = SimulatorInterface(
         name=sim.env_name,
         timeout=60,
         simulator_context=config_client.simulator_context,
+        description=interface['description']
     )
     registered_session = client.session.create(
         workspace_name=config_client.workspace, body=registration_info

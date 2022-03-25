@@ -1,0 +1,72 @@
+{
+    "name": "YOUR_SIM_NAME",
+    "timeout": 60,
+    "description": {
+      "config": {
+        "category": "Struct",
+        "fields": [
+          {
+            "name": "CONFIG_FIELD_NAME_1",
+            "type": {
+              "category": "RELATED_INKLING_TYPE",
+              "comment": "FIELD_DESCRIPTION"
+            }
+          },
+          {
+            "name": "CONFIG_FIELD_NAME_2",
+            "type": {
+              "category": "RELATED_INKLING_TYPE",
+              "comment": "FIELD_DESCRIPTION"
+            }
+          }
+        ]
+      },
+      "action": {
+        "category": "Struct",
+        "fields": [
+          {
+            "name": "ACTION_FIELD_NAME_1",
+            "type": {
+              "category": "RELATED_INKLING_TYPE",
+              "namedValue": [
+                {
+                  "name": "VALUE_NAME_1",
+                  "value": -1
+                },
+                {
+                  "name": "VALUE_NAME",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "state": {
+        "category": "Struct",
+        "fields": [
+          {
+            "name": "STATE_FIELD_NAME_1",
+            "type": {
+              "category": "RELATED_INKLING_TYPE",
+              "comment": "FIELD_DESCRIPTION"
+            }
+          },
+          {
+            "name": "STATE_FIELD_NAME_2",
+            "type": {
+              "category": "RELATED_INKLING_TYPE",
+              "comment": "FIELD_DESCRIPTION"
+            }
+          },
+          {
+            "name": "STATE_FIELD_NAME_3",
+            "type": {
+              "category": "RELATED_INKLING_TYPE",
+              "comment": "FIELD_DESCRIPTION"
+            }
+          }
+        ]
+      }
+    }
+  }

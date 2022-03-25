@@ -1,0 +1,55 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/microsoft-bonsai-api/main/Reference/siminterface.schema.json",
+    
+    "name": "Vander Poly",
+    "timeout": 60,
+    "description": {
+      "config": {
+        "category": "Struct",
+        "fields": [
+          {
+            "name": "mu",
+            "type": {
+              "category": "Number"
+            }
+          }
+        ]
+      },
+      "action": {
+        "category": "Struct",
+        "fields": [
+          {
+            "name": "x0",
+            "type": {
+              "category": "Number",
+              "comment": "the first state"
+            }
+          }
+        ]
+      },
+      "state": {
+        "category": "Struct",
+        "fields": [
+          {
+            "name": "derx0",
+            "type": {
+              "category": "Number"
+            }
+          },
+          {
+            "name": "x1",
+            "type": {
+              "category": "Number",
+              "comment": "the second state"
+            }
+          },
+          {
+            "name": "derx1",
+            "type": {
+              "category": "Number"
+            }
+          }
+        ]
+      }
+    }
+  }
