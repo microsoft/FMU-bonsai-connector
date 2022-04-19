@@ -51,14 +51,22 @@ def delete_if_exists(path: str, is_directory: bool = False):
         print(f"  deleted {path}")
 
 def main(mode: str, fmu_path: str):
+    has_error = False
     if not os.path.exists(fmu_path):
         print(f"test-fmu.py: error: File {fmu_path} not found.")
+        has_error = True
     if not "SIM_WORKSPACE" in os.environ:
         print("test-fmu.py: error: SIM_WORKSPACE environment variable must be set to your Bonsai workspace ID.")
+        has_error = True
     if not "SIM_ACCESS_KEY" in os.environ:
         print("test-fmu.py: error: SIM_ACCESS_KEY environment variable must be set to your Bonsai workspace access key.")
+        has_error = True
     if mode=="managed" and not "SIM_ACR_PATH" in os.environ:
         print("test-fmu.py: error: SIM_ACR_PATH environment variable must be set to the full path of the Azure Contrainer Registry associated with your Bonsai workspace.")
+        has_error = True
+
+    if has_error:
+        return
 
     # Determine the FMU connector root directory by its relative path from this script file.
     root_dir = pathlib.Path(__file__).resolve().parent.parent
@@ -112,6 +120,9 @@ def main(mode: str, fmu_path: str):
             run_command(f"docker tag fmu_runtime:latest {sim_acr_path}/fmu_runtime:latest")
             run_command(f"docker push {sim_acr_path}/fmu_runtime:latest")
             print()
+
+            # TODO: This step fails or hangs if the user hasn't logged in to the CLI or hasn't run bonsai configure on a fresh machine.
+            #       Ideally, this script should prompt the user to log in. Perhaps it should run bonsai configure before the next step.
 
             print_highlighted("Checking if existing simulator needs to be removed from Bonsai workspace")
             package_name = f"{pathlib.Path(fmu_path).stem}_fmu"
