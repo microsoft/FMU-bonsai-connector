@@ -1,5 +1,5 @@
 # Use Windows 10 sever
-FROM mcr.microsoft.com/windows:10.0.17763.1040 AS fmu_base
+FROM mcr.microsoft.com/windows/servercore:ltsc2019 AS fmu_base
 
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]

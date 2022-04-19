@@ -36,6 +36,12 @@ Lastly, note that this FMU Connector relies on 2 auxiliary packages*:
 For this project you will need to install [Anaconda](https://www.anaconda.com/products/individual) (or miniconda).
 This software will take care of handling your virtual environments and packages installed.
 
+**Installing Docker**
+
+You will need Docker installed on your local machine. The community edition of Docker is available for Windows at https://docs.docker.com/engine/install.
+
+> Docker runs in Linux mode by default. This FMU connector supports FMUs run with Windows. You will need to switch modes by right-clicking the Docker Desktop application in the notification area of the taskbar and selecting Switch to Windows containers.
+
 **Get Your Conda Environment Ready**
 
     conda env create --file environment.yml
