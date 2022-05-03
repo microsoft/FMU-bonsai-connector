@@ -890,7 +890,6 @@ class FMUConnector:
         names_array = []
         for name in var_names:
             if name not in self.vars_to_idx.keys():
-                print("[_var_names_to_indices] Invalid variable name '{}' has been skipped.".format(name))
                 continue
             indices_array.append(self.vars_to_idx[name])
             names_array.append(name)
