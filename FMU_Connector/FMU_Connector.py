@@ -934,6 +934,7 @@ class FMUConnector:
         # Terminate instance
         self.fmu.terminate()
         self._is_initialized = False
+        self._is_instantiated = False
 
         return
 
