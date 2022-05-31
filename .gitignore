@@ -15,9 +15,12 @@
 *_unzipped/
 
 # Don't check in FMU files inside the generic folder itself
+/generic/generic_unzipped/
+/generic/__pycache__/
 /generic/*_conf.yaml
 /generic/*.fmu
 /generic/interface.json
+
 
 # Don't check in the Sim.zip file copied into the root when building containers
 /Sim.zip

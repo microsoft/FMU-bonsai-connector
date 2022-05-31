@@ -1,9 +1,12 @@
 # Ignore logs folder
 logs/
 
+# Ignore .env 
+.env
+
 # Ignore files created in generic folder while running local sim
-/generic/generic.fmu
-/generic/generic_conf.yaml
-/generic/interface.json
 /generic/generic_unzipped/
 /generic/__pycache__/
+/generic/*_conf.yaml
+/generic/*.fmu
+/generic/interface.json
