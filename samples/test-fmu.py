@@ -68,6 +68,10 @@ def main(mode: str, fmu_path: str):
     if has_error:
         return
 
+    # Run a simple Bonsai CLI command. This will prompt the user if they need to log in for the CLI.
+    print_highlighted("Log in to Bonsai CLI (if needed)")
+    run_command("bonsai -s")
+
     # Determine the FMU connector root directory by its relative path from this script file.
     root_dir = pathlib.Path(__file__).resolve().parent.parent
 
@@ -106,10 +110,13 @@ def main(mode: str, fmu_path: str):
         run_command(f"docker build -t fmu_runtime:latest -f {root_dir}\\Dockerfile-windows_FMU_RUNTIME {root_dir}")
         print()
 
-        if mode == "local-container":
+        if mode == "local-container" or mode == "local-container-interactive":
 
             print_highlighted("Launching local container")
-            run_command(f"start docker run -it --rm -e SIM_ACCESS_KEY=%SIM_ACCESS_KEY% -e SIM_WORKSPACE=%SIM_WORKSPACE% fmu_runtime:latest")
+            command_line = f"start docker run -it --rm -e SIM_ACCESS_KEY=%SIM_ACCESS_KEY% -e SIM_WORKSPACE=%SIM_WORKSPACE% fmu_runtime:latest"
+            if mode == "local-container-interactive":
+                command_line += " powershell" # tell docker to launch the container with a PowerShell prompt instead of running the CMD
+            run_command(command_line)
 
         elif mode == "managed":
 
@@ -168,7 +175,7 @@ managed: Build the connector containers and add them as a managed simulator in y
 
     parser.add_argument(
         "--mode",
-        choices=["local", "local-container", "managed"],
+        choices=["local", "local-container", "local-container-interactive", "managed"],
         required=True,
         help=mode_help,
     )

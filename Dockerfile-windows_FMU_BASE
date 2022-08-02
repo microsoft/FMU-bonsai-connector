@@ -4,6 +4,13 @@ FROM mcr.microsoft.com/windows/servercore:ltsc2019 AS fmu_base
 # $ProgressPreference: https://github.com/PowerShell/PowerShell/issues/2138#issuecomment-251261324
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
+# Install Microsoft Visual C++ runtime as described at https://github.com/microsoft/dotnet-framework-docker/issues/15#issuecomment-1068934155
+# Some FMU DLLs have dependencies on this runtime
+RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
+	Invoke-WebRequest "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "vc_redist.x64.exe"; \
+	Start-Process -filepath C:\vc_redist.x64.exe -ArgumentList "/install", "/passive", "/norestart" -Passthru | Wait-Process; \
+	Remove-Item -Force vc_redist.x64.exe;
+
 ENV PYTHON_VERSION 3.7.8
 ENV PYTHON_RELEASE 3.7.8
 
