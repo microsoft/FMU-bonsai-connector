@@ -645,6 +645,8 @@ class FMUConnector:
             print(error_log)
             return
 
+        print(f'  Step Size: {self.step_size:.3f}, Substep Size {self.substep_size:.3f}')
+
         # [TODO] Consider potential float precision issues with this code that may occur when sim_time grows to large values.
 
         # Step forward in sim by step_size.
@@ -727,7 +729,12 @@ class FMUConnector:
             sim_outputs = self.sim_outputs
 
         states_dict = self._get_variables(sim_outputs)
-        
+
+        # Add the current simulation time to the state. Brains don't have to use
+        # this, but it is useful for analytics, particularly if FMU_step_size is
+        # dynamically varied.
+        states_dict['FMU_time'] = self.sim_time
+
         # Check if more than one index has been found
         if not len(states_dict.keys()) > 0:
             print("[get_states] No valid state names have been provided. No states are returned.")
@@ -751,6 +758,15 @@ class FMUConnector:
             print("[apply_actions] Provided action dict is empty. No action changes will be applied.")
             return False
         
+        # The brain can specify a dynamically-adapting time step size by setting the value of
+        # 'FMU_step_size' in an action variable. An example of how this would be used would
+        # be for the brain to take longer time steps during "cruising" periods when high-frequency
+        # adjustments aren't needed in order to "fast forward" during lengthy less-interesting
+        # portions of an episode that would have otherwise taken up more iterations.
+        if 'FMU_step_size' in b_action_vals:
+            self.step_size = b_action_vals['FMU_step_size']
+            del b_action_vals['FMU_step_size']
+
         # We forward the configuration values provided
         applied_actions_bool = self._set_variables(b_action_vals)
 
