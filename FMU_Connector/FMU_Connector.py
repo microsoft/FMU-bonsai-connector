@@ -307,7 +307,32 @@ class FMUSimValidation:
                                             }
                                         })
 
-        
+        # Add the special hardcoded FMU-specific variables that we make available
+        # for all models
+        sim_config_list.append({"name": "FMU_step_size",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: If set, overrides the default simulation step size. Each Bonsai iteration will step the FMU simulation forward by this amount of time."
+                                    }
+                                })
+        sim_config_list.append({"name": "FMU_substep_size",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: If set, performs each Bonsai iteration as a sequence of smaller simulation steps. Multiple FMU simulation steps of size FMU_substep_size will be performed in each Bonsai iteration with a total time of FMU_substep_size."
+                                    }
+                                })
+        sim_action_list.append({"name": "FMU_step_size",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: If set, overrides the default simulation step size. Each Bonsai iteration will step the FMU simulation forward by this amount of time. When this is set using an action, it overrides config settings and can be used to take variable sized time steps dynamically controlled by the brain."
+                                    }
+                                })
+        sim_state_list.append({"name": "FMU_time",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: Current simulation time. This is the time at the end of the last simulation step."
+                                    }
+                                })
      
         interface_dict = {"name": self.model_description.modelName,
                           "timeout":60,
