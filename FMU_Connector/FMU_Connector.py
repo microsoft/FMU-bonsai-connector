@@ -645,8 +645,28 @@ class FMUConnector:
             print(error_log)
             return
 
-        self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=self.step_size)
-        self.sim_time += self.step_size
+        try:
+            # [TODO] Consider potential float precision issues with this code that may occur when sim_time grows to large values.
+
+            print(f"step {self.sim_time} + {self.step_size}")
+
+            # Step forward in sim by step_size.
+            next_sim_time = self.sim_time + self.step_size
+
+            # We may need to take multiple smaller steps of size substep_size.
+            # Due to precision issues, we may not reach next_sim_time exactly. In order to avoid taking a very small final step,
+            # stop when we are within a small fraction of the substep size.
+            stop_tolerance = self.substep_size * 0.001
+            while self.sim_time + stop_tolerance < next_sim_time:
+                next_step_size = min(self.substep_size, next_sim_time - self.sim_time)
+                print(f"  substep {self.sim_time} + {next_step_size}")
+                self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
+                self.sim_time += next_step_size
+            print(f"  step {self.sim_time} done")
+        except Exception as err:
+            print(f"doStep exception: {err}")
+            raise
+
         return
 
     
@@ -668,6 +688,12 @@ class FMUConnector:
         if 'FMU_step_size' in config_param_vals:
             self.step_size = config_param_vals['FMU_step_size']
             print(f"[FMU Connector] Using step size {self.step_size} from FMU_step_size value in SimConfig")
+
+        if 'FMU_substep_size' in config_param_vals:
+            self.substep_size = config_param_vals['FMU_substep_size']
+            print(f"[FMU Connector] Using substep size {self.substep_size} from FMU_substep_size value in SimConfig")
+        else:
+            self.substep_size = self.step_size
 
         return
 
