@@ -17,6 +17,10 @@ SIM_CONFIG_NAME_f = lambda model_fp: model_fp.replace(".fmu", "_conf.yaml")
 FMI_VERSION = "2.0"
 
 
+def fmi_call_logger(message:str):
+    print('[FMI] ' + message, flush=True)
+
+
 class FMUSimValidation:
     def __init__(
         self,
@@ -321,6 +325,12 @@ class FMUSimValidation:
                                     "comment": "Reserved FMU variable: If set, performs each Bonsai iteration as a sequence of smaller simulation steps. Multiple FMU simulation steps of size FMU_substep_size will be performed in each Bonsai iteration with a total time of FMU_substep_size."
                                     }
                                 })
+        sim_config_list.append({"name": "FMU_logging",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: Enable logging of each FMU API call to the console output. Set to 1 to enable logging."
+                                    }
+                                })
         sim_action_list.append({"name": "FMU_step_size",
                                 "type": {
                                     "category": "Number",
@@ -455,6 +465,7 @@ class FMUConnector:
         fmi_version: str = FMI_VERSION,
         user_validation: bool = False,
         use_unzipped_model: bool = False,
+        fmi_logging: bool = False,
     ):
         """Template for simulating FMU models for Bonsai integration.
 
@@ -477,6 +488,8 @@ class FMUConnector:
             is used. Useful to test changes to unzipped FMI model.
               Note, unzipping is performed if unzipped version is not found.
         """
+
+        self.fmi_logging = fmi_logging
 
         # validate simulation: config_vars (optional), inputs, and outputs
         validated_sim = FMUSimValidation(model_filepath, user_validation)
@@ -635,7 +648,6 @@ class FMUConnector:
         # ---------------------------------------------------------------
         return
 
-
     def initialize_model(self, config_param_vals = None):
         """Initialize model in the sequential manner required.
         """
@@ -646,6 +658,10 @@ class FMUConnector:
             self._is_instantiated = True
         else:
             self.fmu.reset()
+
+        config_logging_value = 0 if config_param_vals == None else config_param_vals.get("FMU_logging", 0)
+        self.episode_fmi_logging = self.fmi_logging or config_logging_value != 0
+        self.fmu.fmiCallLogger = fmi_call_logger if self.episode_fmi_logging else None
 
         self.fmu.setupExperiment(startTime=self.start_time)
         if config_param_vals is not None:
@@ -683,6 +699,8 @@ class FMUConnector:
         stop_tolerance = self.substep_size * 0.001
         while self.sim_time + stop_tolerance < next_sim_time:
             next_step_size = min(self.substep_size, next_sim_time - self.sim_time)
+            if self.episode_fmi_logging:
+                print(f'    doStep({self.sim_time:.3f}, {next_step_size:.3f})', flush=True)
             self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
             self.sim_time += next_step_size
 

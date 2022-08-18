@@ -40,6 +40,7 @@ class FMUSimulatorSession:
     # TODO_PER_SIM 5: Set-up model filepath (modeldir) & sim name (env_name) variables
     def __init__(
         self,
+        fmi_logging: bool = False,
         modeldir: str = "generic.fmu",
         log_file: Union[str, None] = None,
     ):
@@ -61,13 +62,13 @@ class FMUSimulatorSession:
         # Validate and instance FMU model
         self.simulator = FMUConnector(model_filepath = self.model_full_path,
                                       fmi_version = FMI_VERSION,
-                                      user_validation = False)
+                                      user_validation = False,
+                                      fmi_logging = fmi_logging)
         self.env_name = f"{self.simulator.model_description.modelName} FMU"
 
         # initialize model - required!
         self.simulator.initialize_model()
 
-        self._reset({})
         self.terminal = False
         if not log_file:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -250,7 +251,7 @@ def test_random_policy(
             terminal = iteration > max_iterations
 
 
-def main(config_setup: bool = False):
+def main(config_setup: bool, fmi_logging: bool):
     """Main entrypoint for running simulator connections
 
     Parameters
@@ -265,7 +266,7 @@ def main(config_setup: bool = False):
         load_dotenv(verbose=True, override=True)
 
     # Grab standardized way to interact with sim API
-    sim = FMUSimulatorSession()
+    sim = FMUSimulatorSession(fmi_logging=fmi_logging)
 
     # Configure client to interact with Bonsai service
     config_client = BonsaiClientConfig()
@@ -361,6 +362,12 @@ if __name__ == "__main__":
         default=False,
         help="Run simulator locally without connecting to platform",
     )
+    parser.add_argument(
+        "--fmi-logging",
+        type=lambda x: bool(strtobool(x)),
+        default=False,
+        help="Print each FMU API call to the console output",
+    )
 
     args = parser.parse_args()
 
@@ -369,5 +376,5 @@ if __name__ == "__main__":
             num_episodes=1000, log_iterations=args.log_iterations
         )
     else:
-        main(config_setup=args.config_setup)
+        main(config_setup=args.config_setup, fmi_logging=args.fmi_logging)
 
