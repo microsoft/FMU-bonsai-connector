@@ -307,7 +307,32 @@ class FMUSimValidation:
                                             }
                                         })
 
-        
+        # Add the special hardcoded FMU-specific variables that we make available
+        # for all models
+        sim_config_list.append({"name": "FMU_step_size",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: If set, overrides the default simulation step size. Each Bonsai iteration will step the FMU simulation forward by this amount of time."
+                                    }
+                                })
+        sim_config_list.append({"name": "FMU_substep_size",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: If set, performs each Bonsai iteration as a sequence of smaller simulation steps. Multiple FMU simulation steps of size FMU_substep_size will be performed in each Bonsai iteration with a total time of FMU_substep_size."
+                                    }
+                                })
+        sim_action_list.append({"name": "FMU_step_size",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: If set, overrides the default simulation step size. Each Bonsai iteration will step the FMU simulation forward by this amount of time. When this is set using an action, it overrides config settings and can be used to take variable sized time steps dynamically controlled by the brain."
+                                    }
+                                })
+        sim_state_list.append({"name": "FMU_time",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: Current simulation time. This is the time at the end of the last simulation step."
+                                    }
+                                })
      
         interface_dict = {"name": self.model_description.modelName,
                           "timeout":60,
@@ -645,8 +670,22 @@ class FMUConnector:
             print(error_log)
             return
 
-        self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=self.step_size)
-        self.sim_time += self.step_size
+        print(f'  Step Size: {self.step_size:.3f}, Substep Size {self.substep_size:.3f}')
+
+        # [TODO] Consider potential float precision issues with this code that may occur when sim_time grows to large values.
+
+        # Step forward in sim by step_size.
+        next_sim_time = self.sim_time + self.step_size
+
+        # We may need to take multiple smaller steps of size substep_size.
+        # Due to precision issues, we may not reach next_sim_time exactly. In order to avoid taking a very small final step,
+        # stop when we are within a small fraction of the substep size.
+        stop_tolerance = self.substep_size * 0.001
+        while self.sim_time + stop_tolerance < next_sim_time:
+            next_step_size = min(self.substep_size, next_sim_time - self.sim_time)
+            self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
+            self.sim_time += next_step_size
+
         return
 
     
@@ -668,6 +707,12 @@ class FMUConnector:
         if 'FMU_step_size' in config_param_vals:
             self.step_size = config_param_vals['FMU_step_size']
             print(f"[FMU Connector] Using step size {self.step_size} from FMU_step_size value in SimConfig")
+
+        if 'FMU_substep_size' in config_param_vals:
+            self.substep_size = config_param_vals['FMU_substep_size']
+            print(f"[FMU Connector] Using substep size {self.substep_size} from FMU_substep_size value in SimConfig")
+        else:
+            self.substep_size = self.step_size
 
         return
 
@@ -709,7 +754,12 @@ class FMUConnector:
             sim_outputs = self.sim_outputs
 
         states_dict = self._get_variables(sim_outputs)
-        
+
+        # Add the current simulation time to the state. Brains don't have to use
+        # this, but it is useful for analytics, particularly if FMU_step_size is
+        # dynamically varied.
+        states_dict['FMU_time'] = self.sim_time
+
         # Check if more than one index has been found
         if not len(states_dict.keys()) > 0:
             print("[get_states] No valid state names have been provided. No states are returned.")
@@ -733,6 +783,15 @@ class FMUConnector:
             print("[apply_actions] Provided action dict is empty. No action changes will be applied.")
             return False
         
+        # The brain can specify a dynamically-adapting time step size by setting the value of
+        # 'FMU_step_size' in an action variable. An example of how this would be used would
+        # be for the brain to take longer time steps during "cruising" periods when high-frequency
+        # adjustments aren't needed in order to "fast forward" during lengthy less-interesting
+        # portions of an episode that would have otherwise taken up more iterations.
+        if 'FMU_step_size' in b_action_vals:
+            self.step_size = b_action_vals['FMU_step_size']
+            del b_action_vals['FMU_step_size']
+
         # We forward the configuration values provided
         applied_actions_bool = self._set_variables(b_action_vals)
 
