@@ -6,6 +6,7 @@ from fmpy import *
 import yaml
 import re
 import json
+import transform
 
 from typing import Any, Dict, List, Union
 
@@ -719,7 +720,9 @@ class FMUConnector:
         
         # Reset time
         self.sim_time = float(self.start_time)
-
+        
+        self.transform = transform.Transform()
+        
         # The machine teacher can specify the time step size by setting the value of
         # 'FMU_step_size' in a lesson's SimConfig.
         if 'FMU_step_size' in config_param_vals:
@@ -772,7 +775,8 @@ class FMUConnector:
             sim_outputs = self.sim_outputs
 
         states_dict = self._get_variables(sim_outputs)
-
+        states_dict = self.transform.transform_states(states_dict)
+        
         # Add the current simulation time to the state. Brains don't have to use
         # this, but it is useful for analytics, particularly if FMU_step_size is
         # dynamically varied.
@@ -810,6 +814,10 @@ class FMUConnector:
             self.step_size = b_action_vals['FMU_step_size']
             del b_action_vals['FMU_step_size']
 
+        # If starTransform exists, give it the dict and let it modify the dict, Assume it doesn't make mistakes?  Or catch exceptions?
+
+        b_action_vals = self.transform.transform_action(b_action_vals)
+        
         # We forward the configuration values provided
         applied_actions_bool = self._set_variables(b_action_vals)
 
