@@ -337,6 +337,12 @@ class FMUSimValidation:
                                     "comment": "Reserved FMU variable: If set, overrides the default simulation step size. Each Bonsai iteration will step the FMU simulation forward by this amount of time. When this is set using an action, it overrides config settings and can be used to take variable sized time steps dynamically controlled by the brain."
                                     }
                                 })
+        sim_state_list.append({"name": "FMU_error",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: 1 if an error occurred during the previous simulation step. Otherwise 0."
+                                    }
+                                })
         sim_state_list.append({"name": "FMU_time",
                                 "type": {
                                     "category": "Number",
@@ -555,7 +561,9 @@ class FMUConnector:
 
         # set current time to start time
         self.sim_time = float(self.start_time)
-        
+
+        self.error_occurred = False
+
         # retrieve FMU model type, as well as model identifier
         self.model_type = "None"
         self.model_identifier = self.model_name
@@ -697,12 +705,17 @@ class FMUConnector:
         # Due to precision issues, we may not reach next_sim_time exactly. In order to avoid taking a very small final step,
         # stop when we are within a small fraction of the substep size.
         stop_tolerance = self.substep_size * 0.001
-        while self.sim_time + stop_tolerance < next_sim_time:
-            next_step_size = min(self.substep_size, next_sim_time - self.sim_time)
-            if self.episode_fmi_logging:
-                print(f'    doStep({self.sim_time:.3f}, {next_step_size:.3f})', flush=True)
-            self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
-            self.sim_time += next_step_size
+        try:
+            while self.sim_time + stop_tolerance < next_sim_time:
+                next_step_size = min(self.substep_size, next_sim_time - self.sim_time)
+                if self.episode_fmi_logging:
+                    print(f'    doStep({self.sim_time:.3f}, {next_step_size:.3f})', flush=True)
+
+                    self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
+                self.sim_time += next_step_size
+        except Exception as err:
+            print(f"Error: doStep({self.sim_time:.3f}, {next_step_size:.3f}): {err}")
+            self.error_occurred = True
 
         return
 
@@ -719,6 +732,8 @@ class FMUConnector:
         
         # Reset time
         self.sim_time = float(self.start_time)
+
+        self.error_occurred = False
 
         # The machine teacher can specify the time step size by setting the value of
         # 'FMU_step_size' in a lesson's SimConfig.
@@ -777,6 +792,9 @@ class FMUConnector:
         # this, but it is useful for analytics, particularly if FMU_step_size is
         # dynamically varied.
         states_dict['FMU_time'] = self.sim_time
+
+        # Set error state if an error occurred during the last step
+        states_dict['FMU_error'] = 1 if self.error_occurred else 0
 
         # Check if more than one index has been found
         if not len(states_dict.keys()) > 0:
