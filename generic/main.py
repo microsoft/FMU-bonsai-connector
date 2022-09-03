@@ -274,10 +274,16 @@ def main(config_setup: bool, fmi_logging: bool):
     with open("interface.json") as file:
         interface = json.load(file)
 
+    # If the user-overrideable transform contains a timeout variable, override the default timeout value.
+    # This is not an ideal solution, but we don't currently have a better way to configure such as setting.
+    timeout = 60
+    if hasattr(sim.simulator.transform, "timeout"):
+        timeout = sim.simulator.transform.timeout
+
     # Create simulator session and init sequence id
     registration_info = SimulatorInterface(
         name=sim.env_name,
-        timeout=60,
+        timeout=timeout,
         simulator_context=config_client.simulator_context,
         description=interface['description']
     )
