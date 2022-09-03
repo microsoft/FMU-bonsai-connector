@@ -1,7 +1,7 @@
 from typing import Dict, Any 
 
 class Transform():
-    def __init__():
+    def __init__(self):
         pass
     
     def transform_state(self, state: Dict[str, Any] ) ->  Dict[str, Any]:

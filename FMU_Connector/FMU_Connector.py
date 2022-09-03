@@ -565,6 +565,8 @@ class FMUConnector:
 
         self.error_occurred = False
 
+        self.transform = transform.Transform()
+
         # retrieve FMU model type, as well as model identifier
         self.model_type = "None"
         self.model_identifier = self.model_name
@@ -790,7 +792,7 @@ class FMUConnector:
             sim_outputs = self.sim_outputs
 
         states_dict = self._get_variables(sim_outputs)
-        states_dict = self.transform.transform_states(states_dict)
+        states_dict = self.transform.transform_state(states_dict)
         
         # Add the current simulation time to the state. Brains don't have to use
         # this, but it is useful for analytics, particularly if FMU_step_size is
@@ -831,8 +833,6 @@ class FMUConnector:
         if 'FMU_step_size' in b_action_vals:
             self.step_size = b_action_vals['FMU_step_size']
             del b_action_vals['FMU_step_size']
-
-        # If starTransform exists, give it the dict and let it modify the dict, Assume it doesn't make mistakes?  Or catch exceptions?
 
         b_action_vals = self.transform.transform_action(b_action_vals)
         
