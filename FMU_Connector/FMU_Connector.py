@@ -565,7 +565,7 @@ class FMUConnector:
 
         self.error_occurred = False
 
-        self.transform = transform.Transform()
+        self.transform = transform.Transform({})
 
         # retrieve FMU model type, as well as model identifier
         self.model_type = "None"
@@ -738,7 +738,7 @@ class FMUConnector:
         
         self.error_occurred = False
 
-        self.transform = transform.Transform()
+        self.transform = transform.Transform(config_param_vals)
         
         # The machine teacher can specify the time step size by setting the value of
         # 'FMU_step_size' in a lesson's SimConfig.
