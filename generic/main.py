@@ -69,7 +69,6 @@ class FMUSimulatorSession:
         # initialize model - required!
         self.simulator.initialize_model()
 
-        self.terminal = False
         if not log_file:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
             log_file = current_time + "_" + self.env_name + "_log.csv"
@@ -146,8 +145,7 @@ class FMUSimulatorSession:
 
     def halted(self) -> bool:
         """Should return True if the simulator cannot continue"""
-        # TODO_PER_SIM 8: Define any halt conditions
-        return self.terminal
+        return self.simulator.error_occurred
 
     def random_policy(self, state: Dict = None) -> Dict:
         # TODO_PER_SIM 9: Update the random policy to be used for the example on policies.py
