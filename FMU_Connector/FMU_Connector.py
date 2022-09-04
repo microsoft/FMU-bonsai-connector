@@ -792,8 +792,7 @@ class FMUConnector:
             sim_outputs = self.sim_outputs
 
         states_dict = self._get_variables(sim_outputs)
-        states_dict = self.transform.transform_state(states_dict)
-        
+
         # Add the current simulation time to the state. Brains don't have to use
         # this, but it is useful for analytics, particularly if FMU_step_size is
         # dynamically varied.
@@ -801,6 +800,8 @@ class FMUConnector:
 
         # Set error state if an error occurred during the last step
         states_dict['FMU_error'] = 1 if self.error_occurred else 0
+
+        states_dict = self.transform.transform_state(states_dict)
 
         # Check if more than one index has been found
         if not len(states_dict.keys()) > 0:
