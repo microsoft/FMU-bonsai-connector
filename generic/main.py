@@ -85,10 +85,7 @@ class FMUSimulatorSession:
 
     def get_state(self) -> Dict[str, float]:
         """ Called to retreive the current state of the simulator. """
-
-        # TODO_PER_SIM 6: (optional) Modify states to be sent to Bonsai
-        # - currently, all states are sent to Bonsai: config_params, states (sim outputs), and actions (sim inputs)
-        return self.simulator.get_all_vars()
+        return self.simulator.get_state_vars()
 
 
     def _reset(self, config: dict):

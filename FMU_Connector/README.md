@@ -49,7 +49,7 @@ The FMU interaction consists of 2 classes:
     > Returns the value for the requested variables. (*Note, any variable type can be requested*)
   - apply_actions:
     > Applies to the simulation the set of variable name/values sent as arguments to the method.
-  - get_all_vars:
+  - get_state_vars:
     > Retrieves the set of variables and values as a dictionary.
 
 
