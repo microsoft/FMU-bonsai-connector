@@ -714,7 +714,7 @@ class FMUConnector:
                 if self.episode_fmi_logging:
                     print(f'    doStep({self.sim_time:.3f}, {next_step_size:.3f})', flush=True)
 
-                    self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
+                self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
                 self.sim_time += next_step_size
         except Exception as err:
             print(f"Error: doStep({self.sim_time:.3f}, {next_step_size:.3f}): {err}")
