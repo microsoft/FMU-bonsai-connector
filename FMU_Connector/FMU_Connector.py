@@ -6,6 +6,8 @@ from fmpy import *
 import yaml
 import re
 import json
+import transform
+import copy
 
 from typing import Any, Dict, List, Union
 
@@ -311,6 +313,20 @@ class FMUSimValidation:
                                             }
                                         })
 
+        def copy_entry_and_prefix_comment(entry, prefix):
+            entry_copy = copy.deepcopy(entry)
+            comment = entry_copy["type"].get("comment", "")
+            comment = comment if comment else ""
+            comment = prefix + comment
+            entry_copy["type"]["comment"] = comment
+            return entry_copy
+
+        for config in sim_config_list:
+            sim_state_list.append(copy_entry_and_prefix_comment(config, "if FMU_state_includes_config: "))
+
+        for action in sim_action_list:
+            sim_state_list.append(copy_entry_and_prefix_comment(action, "if FMU_state_includes_action: "))
+
         # Add the special hardcoded FMU-specific variables that we make available
         # for all models
         sim_config_list.append({"name": "FMU_step_size",
@@ -331,10 +347,34 @@ class FMUSimValidation:
                                     "comment": "Reserved FMU variable: Enable logging of each FMU API call to the console output. Set to 1 to enable logging."
                                     }
                                 })
+        sim_config_list.append({"name": "FMU_state_includes_config",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: Set to 1 to include the value of config variable in the state structure."
+                                    }
+                                })
+        sim_config_list.append({"name": "FMU_state_includes_action",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: Set to 1 to include the value of the previous action's variable in the state structure."
+                                    }
+                                })
+        sim_config_list.append({"name": "FMU_state_includes_other",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": 'Reserved FMU variable: Set to 1 to include the value of other FMU variables in the state structure. This includes state variables that do not have a causality of "output".'
+                                    }
+                                })
         sim_action_list.append({"name": "FMU_step_size",
                                 "type": {
                                     "category": "Number",
                                     "comment": "Reserved FMU variable: If set, overrides the default simulation step size. Each Bonsai iteration will step the FMU simulation forward by this amount of time. When this is set using an action, it overrides config settings and can be used to take variable sized time steps dynamically controlled by the brain."
+                                    }
+                                })
+        sim_state_list.append({"name": "FMU_error",
+                                "type": {
+                                    "category": "Number",
+                                    "comment": "Reserved FMU variable: 1 if an error occurred during the previous simulation step. Otherwise 0."
                                     }
                                 })
         sim_state_list.append({"name": "FMU_time",
@@ -555,7 +595,11 @@ class FMUConnector:
 
         # set current time to start time
         self.sim_time = float(self.start_time)
-        
+
+        self.error_occurred = False
+
+        self.transform = transform.Transform({})
+
         # retrieve FMU model type, as well as model identifier
         self.model_type = "None"
         self.model_identifier = self.model_name
@@ -659,7 +703,18 @@ class FMUConnector:
         else:
             self.fmu.reset()
 
-        config_logging_value = 0 if config_param_vals == None else config_param_vals.get("FMU_logging", 0)
+        config_logging_value = 0
+        self.state_includes_config = False
+        self.state_includes_action = False
+        self.state_includes_other = False
+        if config_param_vals != None:
+             config_logging_value = config_param_vals.get("FMU_logging", 0)
+             self.state_includes_config = config_param_vals.get("FMU_state_includes_config", 0) != 0
+             self.state_includes_action = config_param_vals.get("FMU_state_includes_action", 0) != 0
+             self.state_includes_other = config_param_vals.get("FMU_state_includes_other", 0) != 0
+
+        self.state_var_names = None
+
         self.episode_fmi_logging = self.fmi_logging or config_logging_value != 0
         self.fmu.fmiCallLogger = fmi_call_logger if self.episode_fmi_logging else None
 
@@ -697,12 +752,17 @@ class FMUConnector:
         # Due to precision issues, we may not reach next_sim_time exactly. In order to avoid taking a very small final step,
         # stop when we are within a small fraction of the substep size.
         stop_tolerance = self.substep_size * 0.001
-        while self.sim_time + stop_tolerance < next_sim_time:
-            next_step_size = min(self.substep_size, next_sim_time - self.sim_time)
-            if self.episode_fmi_logging:
-                print(f'    doStep({self.sim_time:.3f}, {next_step_size:.3f})', flush=True)
-            self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
-            self.sim_time += next_step_size
+        try:
+            while self.sim_time + stop_tolerance < next_sim_time:
+                next_step_size = min(self.substep_size, next_sim_time - self.sim_time)
+                if self.episode_fmi_logging:
+                    print(f'    doStep({self.sim_time:.3f}, {next_step_size:.3f})', flush=True)
+
+                self.fmu.doStep(currentCommunicationPoint=self.sim_time, communicationStepSize=next_step_size)
+                self.sim_time += next_step_size
+        except Exception as err:
+            print(f"Error: doStep({self.sim_time:.3f}, {next_step_size:.3f}): {err}")
+            self.error_occurred = True
 
         return
 
@@ -719,7 +779,11 @@ class FMUConnector:
         
         # Reset time
         self.sim_time = float(self.start_time)
+        
+        self.error_occurred = False
 
+        self.transform = transform.Transform(config_param_vals)
+        
         # The machine teacher can specify the time step size by setting the value of
         # 'FMU_step_size' in a lesson's SimConfig.
         if 'FMU_step_size' in config_param_vals:
@@ -778,6 +842,11 @@ class FMUConnector:
         # dynamically varied.
         states_dict['FMU_time'] = self.sim_time
 
+        # Set error state if an error occurred during the last step
+        states_dict['FMU_error'] = 1 if self.error_occurred else 0
+
+        states_dict = self.transform.transform_state(states_dict)
+
         # Check if more than one index has been found
         if not len(states_dict.keys()) > 0:
             print("[get_states] No valid state names have been provided. No states are returned.")
@@ -810,6 +879,8 @@ class FMUConnector:
             self.step_size = b_action_vals['FMU_step_size']
             del b_action_vals['FMU_step_size']
 
+        b_action_vals = self.transform.transform_action(b_action_vals)
+        
         # We forward the configuration values provided
         applied_actions_bool = self._set_variables(b_action_vals)
 
@@ -819,43 +890,46 @@ class FMUConnector:
         return applied_actions_bool
 
 
-    def get_all_vars(self):
+    def get_state_vars(self):
         """Get a dictionary of (var_name: var_val) pairs for all variables in simulation.
         """
         
         # Ensure model has been initialized at least once
-        self._model_has_been_initialized("get_all_vars")
+        self._model_has_been_initialized("get_state_vars")
 
         # Get all variable names in model
-        all_var_names = self.get_all_var_names()
+        state_var_names = self.get_state_var_names()
 
         # Reusing get_states method --> Retrieve dict with (state_name, state_value) pairs
-        all_vars = self.get_states(all_var_names)
-        return all_vars
+        state_vars = self.get_states(state_var_names)
+        return state_vars
 
 
-    def get_all_var_names(self):
+    def get_state_var_names(self):
         """Get a list of all variables in the sim (removing duplicates, if any).
              Note, list is kept the same from first time this method is called.
         """
 
-        if hasattr(self, "all_var_names"):
-            return self.all_var_names
+        if self.state_var_names:
+            return self.state_var_names
 
         # Append all variables in model (defined in YAML).
         aux_all_var_names = []
-        aux_all_var_names.extend(self.sim_config_params)
-        aux_all_var_names.extend(self.sim_inputs)
         aux_all_var_names.extend(self.sim_outputs)
-        aux_all_var_names.extend(self.sim_other_vars)
+        if self.state_includes_config:
+            aux_all_var_names.extend(self.sim_config_params)
+        if self.state_includes_action:
+            aux_all_var_names.extend(self.sim_inputs)
+        if self.state_includes_other:
+            aux_all_var_names.extend(self.sim_other_vars)
 
         # Remove duplicates (if any) -- Keeping initial order
         all_var_names = [aux_all_var_names[i] for i in range(len(aux_all_var_names)) \
                       if aux_all_var_names[i] not in aux_all_var_names[:i]]
 
         # Store for following calls
-        self.all_var_names = all_var_names
-        return self.all_var_names
+        self.state_var_names = all_var_names
+        return self.state_var_names
 
 
     def _apply_config(self, config_param_vals: Dict[str, Any] = {}):

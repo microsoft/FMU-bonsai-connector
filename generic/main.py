@@ -69,7 +69,6 @@ class FMUSimulatorSession:
         # initialize model - required!
         self.simulator.initialize_model()
 
-        self.terminal = False
         if not log_file:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
             log_file = current_time + "_" + self.env_name + "_log.csv"
@@ -86,10 +85,7 @@ class FMUSimulatorSession:
 
     def get_state(self) -> Dict[str, float]:
         """ Called to retreive the current state of the simulator. """
-
-        # TODO_PER_SIM 6: (optional) Modify states to be sent to Bonsai
-        # - currently, all states are sent to Bonsai: config_params, states (sim outputs), and actions (sim inputs)
-        return self.simulator.get_all_vars()
+        return self.simulator.get_state_vars()
 
 
     def _reset(self, config: dict):
@@ -146,8 +142,7 @@ class FMUSimulatorSession:
 
     def halted(self) -> bool:
         """Should return True if the simulator cannot continue"""
-        # TODO_PER_SIM 8: Define any halt conditions
-        return self.terminal
+        return self.simulator.error_occurred
 
     def random_policy(self, state: Dict = None) -> Dict:
         # TODO_PER_SIM 9: Update the random policy to be used for the example on policies.py
@@ -276,10 +271,16 @@ def main(config_setup: bool, fmi_logging: bool):
     with open("interface.json") as file:
         interface = json.load(file)
 
+    # If the user-overrideable transform contains a timeout variable, override the default timeout value.
+    # This is not an ideal solution, but we don't currently have a better way to configure such as setting.
+    timeout = 60
+    if hasattr(sim.simulator.transform, "timeout"):
+        timeout = sim.simulator.transform.timeout
+
     # Create simulator session and init sequence id
     registration_info = SimulatorInterface(
         name=sim.env_name,
-        timeout=60,
+        timeout=timeout,
         simulator_context=config_client.simulator_context,
         description=interface['description']
     )

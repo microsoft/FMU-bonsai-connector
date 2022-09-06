@@ -76,7 +76,7 @@ RUN Write-Host ('Downloading get-pip.py ({0}) ...' -f $env:PYTHON_GET_PIP_URL); 
 WORKDIR /src
 
 # Transferring folders up
-COPY ./FMU_Connector/FMU_Connector.py /src/FMU_Connector/FMU_Connector.py
+COPY ./FMU_Connector/*.py /src/FMU_Connector/
 
 COPY ./generic /src/generic
 

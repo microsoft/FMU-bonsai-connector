@@ -50,10 +50,13 @@ def delete_if_exists(path: str, is_directory: bool = False):
             os.remove(path)
         print(f"  deleted {path}")
 
-def main(mode: str, fmu_path: str):
+def main(mode: str, fmu_path: str, transform_path: str):
     has_error = False
     if not os.path.exists(fmu_path):
         print(f"test-fmu.py: error: File {fmu_path} not found.")
+        has_error = True
+    if transform_path and not os.path.exists(transform_path):
+        print(f"test-fmu.py: error: File {transform_path} not found.")
         has_error = True
     if not "SIM_WORKSPACE" in os.environ:
         print("test-fmu.py: error: SIM_WORKSPACE environment variable must be set to your Bonsai workspace ID.")
@@ -100,9 +103,12 @@ def main(mode: str, fmu_path: str):
         print()
 
         print(f"* Zipping {fmu_path}")
-        zip_path = f"{root_dir}\Sim.zip"
+        zip_path = f"{root_dir}\\Sim.zip"
         with ZipFile(zip_path, 'w') as zipfile:
             zipfile.write(fmu_path, arcname=pathlib.Path(fmu_path).name)
+            if transform_path:
+                print(f"* Zipping {transform_path}")
+                zipfile.write(transform_path, arcname="transform.py")
         print(f"  zipped {fmu_path} -> {zip_path}")
         print()
 
@@ -152,7 +158,7 @@ Examples:
     Run vanDerPol.fmu locally as an unmanaged sim.
  test-fmu -mode local-container Integrator.fmu
     Run Integrator.fmu locally in a Docker container as an unmanaged sim.
- test-fmu -mode local-container vanDerPol.fmu
+ test-fmu -mode managed vanDerPol.fmu
     Create a managed sim in your Bonsai workspace for running vanDerPol.fmu.
 """.strip()
 
@@ -181,8 +187,17 @@ managed: Build the connector containers and add them as a managed simulator in y
     )
 
     parser.add_argument(
+        "--transform",
+        type=str,
+        required=False,
+        help="Path of a .py file for includion in the zip file as transform.py. This file is used to override the states/actions with a custom transform.",
+    )
+
+    parser.add_argument(
         "fmu_path",
-        type=str)
+        type=str,
+        help="Path of the FMU file to test.",
+        )
 
     args = parser.parse_args()
-    main(args.mode, args.fmu_path)
+    main(args.mode, args.fmu_path, args.transform)
