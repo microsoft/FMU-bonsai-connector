@@ -365,12 +365,6 @@ class FMUSimValidation:
                                     "comment": 'Reserved FMU variable: Set to 1 to include the value of other FMU variables in the state structure. This includes state variables that do not have a causality of "output".'
                                     }
                                 })
-        sim_config_list.append({"name": "FMU_logging",
-                                "type": {
-                                    "category": "Number",
-                                    "comment": "Reserved FMU variable: Enable logging of each FMU API call to the console output. Set to 1 to enable logging."
-                                    }
-                                })
         sim_action_list.append({"name": "FMU_step_size",
                                 "type": {
                                     "category": "Number",

@@ -138,7 +138,7 @@ def main(mode: str, fmu_path: str, transform_path: str):
             #       Ideally, this script should prompt the user to log in. Perhaps it should run bonsai configure before the next step.
 
             print_highlighted("Checking if existing simulator needs to be removed from Bonsai workspace")
-            package_name = f"{pathlib.Path(fmu_path).stem}_fmu_v7"
+            package_name = f"{pathlib.Path(fmu_path).stem}_fmu"
             package_show_cmd = run_command(f"bonsai simulator package show --name {package_name} --output json", return_json=True, errors_expected=True)
             if package_show_cmd != None:
                 run_command(f"bonsai simulator package remove --name {package_name} --yes")
