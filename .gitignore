@@ -25,6 +25,7 @@
 # Don't check in the Sim.zip file copied into the root when building containers
 /Sim.zip
 
-# Don't check this file in
+# Don't check these files in
 fm_RSM_FMU_Pipeline.fmu
 Aircraft_*.fmu
+DC-Motor.ssp
