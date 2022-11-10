@@ -1,7 +1,8 @@
 import argparse
 import textwrap
 
-from fmpy.ssp.simulation import simulate_ssp
+#from fmpy.ssp.simulation import simulate_ssp
+from custom_simulation import simulate_ssp
 from fmpy.ssp.ssd import read_ssd
 from fmpy.util import plot_result
 
