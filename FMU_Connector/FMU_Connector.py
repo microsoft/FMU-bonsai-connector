@@ -931,6 +931,8 @@ class FMUConnector:
         self.state_var_names = all_var_names
         return self.state_var_names
 
+    def get_model_name(self):
+        return f"{self.simulator.model_description.modelName} FMU"
 
     def _apply_config(self, config_param_vals: Dict[str, Any] = {}):
         """Apply configuration paramaters.

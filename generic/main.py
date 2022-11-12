@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Union
 
 from dotenv import load_dotenv, set_key
 from FMU_Connector import FMUConnector
+from SSP_Connector import SSPConnector
 from microsoft_bonsai_api.simulator.client import BonsaiClient, BonsaiClientConfig
 from microsoft_bonsai_api.simulator.generated.models import (
     SimulatorInterface,
@@ -41,7 +42,7 @@ class FMUSimulatorSession:
     def __init__(
         self,
         fmi_logging: bool = False,
-        modeldir: str = "generic.fmu",
+        modeldir: str = "generic.ssp",
         log_file: Union[str, None] = None,
     ):
         """Template for simulating FMU models with FMUConnector
@@ -60,11 +61,16 @@ class FMUSimulatorSession:
         print("Using simulator file from: ", self.model_full_path)
 
         # Validate and instance FMU model
-        self.simulator = FMUConnector(model_filepath = self.model_full_path,
-                                      fmi_version = FMI_VERSION,
-                                      user_validation = False,
-                                      fmi_logging = fmi_logging)
-        self.env_name = f"{self.simulator.model_description.modelName} FMU"
+        model_extension = os.path.splitext(modeldir)[1]
+        if model_extension == ".ssp":
+            self.simulator = SSPConnector(model_filepath = self.model_full_path)
+        else:
+            self.simulator = FMUConnector(model_filepath = self.model_full_path,
+                                        fmi_version = FMI_VERSION,
+                                        user_validation = False,
+                                        fmi_logging = fmi_logging)
+
+        self.env_name = self.simulator.get_model_name()
 
         # initialize model - required!
         self.simulator.initialize_model()
@@ -274,7 +280,7 @@ def main(config_setup: bool, fmi_logging: bool):
     # If the user-overrideable transform contains a timeout variable, override the default timeout value.
     # This is not an ideal solution, but we don't currently have a better way to configure such as setting.
     timeout = 60
-    if hasattr(sim.simulator.transform, "timeout"):
+    if hasattr(sim.simulator, "transform") and hasattr(sim.simulator.transform, "timeout"):
         timeout = sim.simulator.transform.timeout
 
     # Create simulator session and init sequence id

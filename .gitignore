@@ -19,6 +19,7 @@
 /generic/__pycache__/
 /generic/*_conf.yaml
 /generic/*.fmu
+/generic/*.ssp
 /generic/interface.json
 
 
