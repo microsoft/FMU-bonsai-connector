@@ -110,4 +110,5 @@ class SSPConnector:
         return state
 
     def get_model_name(self):
+        # TODO: Dynamically return model name from system
         return f"SSP Model"
