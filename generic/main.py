@@ -42,7 +42,7 @@ class FMUSimulatorSession:
     def __init__(
         self,
         fmi_logging: bool = False,
-        modeldir: str = "generic.ssp",
+        modeldir: str = None,
         log_file: Union[str, None] = None,
     ):
         """Template for simulating FMU models with FMUConnector
@@ -55,6 +55,13 @@ class FMUSimulatorSession:
             name of simulator environment, registered by SimulatorInterface
             note, this will be your sim name in preview.bons.ai
         """
+
+        # TODO: Move this logic outside the class -- this special filename detection belongs in main.py
+        if modeldir is None:
+            # Default for modeldir is generic.fmu or generic.ssp.
+            modeldir = "generic.fmu"
+            if os.path.exists(os.path.join(dir_path, "generic.ssp")):
+                modeldir = "generic.ssp"
 
         self.modeldir = modeldir
         self.model_full_path = os.path.join(dir_path, self.modeldir)
