@@ -81,6 +81,7 @@ def main(mode: str, fmu_path: str, transform_path: str):
     print_highlighted("Cleaning up previous temporary sample files")
     delete_if_exists(f"{root_dir}\\sim.zip")
     delete_if_exists(f"{root_dir}\\generic\\generic.fmu")
+    delete_if_exists(f"{root_dir}\\generic\\generic.ssp")
     delete_if_exists(f"{root_dir}\\generic\\generic_conf.yaml")
     delete_if_exists(f"{root_dir}\\generic\\generic_unzipped", is_directory = True)
     print()
@@ -88,7 +89,8 @@ def main(mode: str, fmu_path: str, transform_path: str):
     if mode == "local":
 
         print_highlighted("Copying new sample files")
-        generic_fmu_path = f"{root_dir}\\generic\\generic.fmu"
+        fmu_path_extension = os.path.splitext(fmu_path)[1]
+        generic_fmu_path = f"{root_dir}\\generic\\generic{fmu_path_extension}"
         shutil.copyfile(fmu_path, generic_fmu_path)
         print(f"  copied {fmu_path} -> {generic_fmu_path}")
         print()
