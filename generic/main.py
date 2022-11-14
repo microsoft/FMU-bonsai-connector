@@ -273,9 +273,13 @@ def main(config_setup: bool, fmi_logging: bool):
     config_client = BonsaiClientConfig()
     client = BonsaiClient(config_client)
 
-    # # Load json file as simulator integration config type file
-    with open("interface.json") as file:
-        interface = json.load(file)
+    interface_description = None
+    # TODO: Support interface description for SSP connector
+    if type(sim.simulator) != SSPConnector:
+        # # Load json file as simulator integration config type file
+        with open("interface.json") as file:
+            interface = json.load(file)
+            interface_description = interface['description']
 
     # If the user-overrideable transform contains a timeout variable, override the default timeout value.
     # This is not an ideal solution, but we don't currently have a better way to configure such as setting.
@@ -285,10 +289,10 @@ def main(config_setup: bool, fmi_logging: bool):
 
     # Create simulator session and init sequence id
     registration_info = SimulatorInterface(
-        name=sim.env_name,
-        timeout=timeout,
-        simulator_context=config_client.simulator_context,
-        description=interface['description']
+        name = sim.env_name,
+        timeout = timeout,
+        simulator_context = config_client.simulator_context,
+        description = interface_description
     )
     registered_session = client.session.create(
         workspace_name=config_client.workspace, body=registration_info
