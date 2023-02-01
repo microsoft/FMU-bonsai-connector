@@ -80,6 +80,7 @@ def main(mode: str, fmu_path: str, transform_path: str):
 
     print_highlighted("Cleaning up previous temporary sample files")
     delete_if_exists(f"{root_dir}\\sim.zip")
+    delete_if_exists(f"{root_dir}\\sim.fmu")
     delete_if_exists(f"{root_dir}\\generic\\generic.fmu")
     delete_if_exists(f"{root_dir}\\generic\\generic_conf.yaml")
     delete_if_exists(f"{root_dir}\\generic\\generic_unzipped", is_directory = True)
@@ -87,7 +88,7 @@ def main(mode: str, fmu_path: str, transform_path: str):
 
     if mode == "local":
 
-        print_highlighted("Copying new sample files")
+        print_highlighted("Copying sample file")
         generic_fmu_path = f"{root_dir}\\generic\\generic.fmu"
         shutil.copyfile(fmu_path, generic_fmu_path)
         print(f"  copied {fmu_path} -> {generic_fmu_path}")
@@ -102,14 +103,15 @@ def main(mode: str, fmu_path: str, transform_path: str):
         run_command(f"docker build -t fmu_base:latest -f {root_dir}\\Dockerfile-windows_FMU_BASE {root_dir}")
         print()
 
-        print(f"* Zipping {fmu_path}")
-        zip_path = f"{root_dir}\\Sim.zip"
-        with ZipFile(zip_path, 'w') as zipfile:
-            zipfile.write(fmu_path, arcname=pathlib.Path(fmu_path).name)
-            if transform_path:
-                print(f"* Zipping {transform_path}")
-                zipfile.write(transform_path, arcname="transform.py")
-        print(f"  zipped {fmu_path} -> {zip_path}")
+        print(f"Copying sample file")
+        root_path = f"{root_dir}\\sim.fmu"
+        shutil.copyfile(fmu_path, root_path)
+        print(f"  copied {fmu_path} -> {root_path}")
+        if transform_path:
+            print("TODO: How to handle transform file now that we are no longer keeping the FMU inside a zip file.")
+            #print(f"* Zipping {transform_path}")
+            #zipfile.write(transform_path, arcname="transform.py")
+            pass
         print()
 
         print_highlighted("Building runtime image")

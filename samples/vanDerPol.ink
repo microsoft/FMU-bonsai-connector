@@ -62,6 +62,7 @@ type SimAction {
 type SimConfig {
     # Oscillation parameter
     mu: number<0.5 .. 4>,
+    FMU_state_includes_action: number,
 }
 
 # Define a concept graph with a single concept
@@ -96,7 +97,8 @@ graph (input: ObservableState) {
                 # from one episode to the next during this lesson.
                 scenario {
                     # Oscillation parameter
-                    mu: number<0.5 .. 4>
+                    mu: number<0.5 .. 4>,
+                    FMU_state_includes_action: 1,
                 }
             }
         }
