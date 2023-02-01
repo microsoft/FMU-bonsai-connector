@@ -1,8 +1,17 @@
 FROM fmu_base
 
-COPY ./sim.zip /src/generic/generic.fmu
+COPY ./sim.* /zip/
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 
+# If the model file is a zip file, unzip it
+RUN if(Test-Path -Path "/zip/sim.zip"){ Expand-Archive -LiteralPath "/zip/sim.zip" -DestinationPath "/zip" }
+
+# Copy the FMU model file into the generic folder
+RUN CP /zip/*.fmu /src/generic/generic.fmu
+
+# Copy the transform.py file (if it exists) over the default version in FMU_Connector
+RUN CP /zip/transform*.py /src/FMU_Connector/
+
 # Run main task
-CMD "python .\generic\main.py"
+CMD "python .\\generic\\main.py"

@@ -22,8 +22,9 @@
 /generic/interface.json
 
 
-# Don't check in the Sim.zip file copied into the root when building containers
+# Don't check in the Sim.zip/fmu file copied into the root when building containers
 /Sim.zip
+/Sim.fmu
 
 # Don't check this file in
 fm_RSM_FMU_Pipeline.fmu
