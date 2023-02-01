@@ -1,14 +1,8 @@
 FROM fmu_base
 
-COPY ./sim.zip /zip/sim.zip
+COPY ./sim.zip /src/generic/generic.fmu
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-
-RUN Expand-Archive -LiteralPath "/zip/sim.zip" -DestinationPath "/zip"
-
-RUN CP /zip/*.fmu /src/generic/generic.fmu
-# Copy the transform.py file (if it exists) over the default version in FMU_Connector
-RUN CP /zip/transform*.py /src/FMU_Connector/
 
 # Run main task
 CMD "python .\generic\main.py"
